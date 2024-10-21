@@ -6,7 +6,7 @@ export default function Task(task) {
   const container = document.createElement("div");
   container.className = "task";
 
-  //   title
+  // title
   const titleContainer = document.createElement("div");
   titleContainer.className = "task__title";
   const titleIcon = document.createElement("img");
