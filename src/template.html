@@ -13,36 +13,46 @@
     </header>
     <main>
       <div class="container">
-        <div class="projects">
-          <h2>Projects</h2>
-          <div class="projects__header">
-            <div class="projects__tabs">
-              <button>Ongoing</button>
-              <button>Archive</button>
-            </div>
-            <button>New</button>
+        <div class="main-header">
+          <h2>Tasks</h2>
+          <div class="main-header__tabs">
+            <button>Ongoing</button>
+            <button>Archive</button>
           </div>
-          <div class="project">
-            <div class="project__title">
+          <button class="main-header__new-button">New</button>
+        </div>
+        <dialog class="new-task-dialog">
+          <form method="dialog">
+            <label
+              >Title
+              <input type="text" name="title" autofocus />
+            </label>
+            <button type="submit">Add</button>
+            <button>Close</button>
+          </form>
+        </dialog>
+        <div class="tasks">
+          <!-- <div class="task">
+            <div class="task__title">
               <img
                 src="assets/images/placeholder.png"
                 alt="placeholder image"
               />
-              <h3>Project 1</h3>
+              <h3>task 1</h3>
             </div>
-            <p class="project__description">
+            <p class="task__description">
               Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum
               voluptatum temporibus, reiciendis at corporis corrupti sapiente
               placeat doloremque consectetur esse quae, quam, magni numquam.
             </p>
-            <div class="project__status">26%</div>
-            <div class="project__buttons">
+            <div class="task__status">26%</div>
+            <div class="task__buttons">
               <button>
                 <img src="assets/icons/copy.svg" alt="duplicate" />
               </button>
               <button><img src="assets/icons/trash.svg" alt="delete" /></button>
             </div>
-          </div>
+          </div> -->
         </div>
       </div>
     </main>
