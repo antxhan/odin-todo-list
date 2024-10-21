@@ -28,10 +28,16 @@ export default function Task(task) {
     status = document.createElement("input");
     status.className = "task__status";
     status.type = "checkbox";
+    status.checked = task.complete;
+    status.addEventListener("change", (e) => {
+      task.complete = !task.complete;
+      container.style.display = "none";
+    });
   } else {
     status = document.createElement("div");
     status.className = "task__status";
-    status.textContent = "26%";
+    const completionPercentage = task.calculateCompletedSubtasks();
+    status.textContent = `${completionPercentage}%`;
   }
 
   // buttons

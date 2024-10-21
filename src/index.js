@@ -9,11 +9,14 @@ class App {
   get tasks() {
     return this._tasks;
   }
+  set tasks(tasks) {
+    this._tasks = tasks;
+  }
   addTask(task) {
-    this._tasks.push(task);
+    this.tasks.push(task);
   }
   deleteTask(task) {
-    this._tasks.splice(this._tasks.indexOf(task), 1);
+    this.tasks.splice(this.tasks.indexOf(task), 1);
   }
 }
 
@@ -33,6 +36,7 @@ class Task {
     this._updatedAt = this._createdAt;
     this._dueDate = dueDate;
     this._priority = priority;
+    this._parentTask = null;
     this._subtasks = null; // array or null
     this._complete = false; // boolean, based on subtasks completedness
   }
@@ -80,28 +84,66 @@ class Task {
   }
   set complete(bool) {
     this._complete = bool;
+    if (this.parentTask) {
+      this.parentTask.calculateCompletedSubtasks();
+    }
   }
-  toggleComplete() {
-    this._complete = !this._complete;
+  calculateCompletedSubtasks() {
+    const completedCount = this.subtasks.filter(
+      (subtask) => subtask.complete
+    ).length;
+    const totalCount = this.subtasks.length;
+    if (completedCount === totalCount) {
+      this.complete = true;
+    }
+    const completionPercentage = (completedCount / totalCount) * 100;
+    return completionPercentage;
+  }
+  get parentTask() {
+    return this._parentTask;
+  }
+  set parentTask(parentTask) {
+    this._parentTask = parentTask;
   }
   get subtasks() {
     return this._subtasks;
   }
+  set subtasks(subtasks) {
+    this._subtasks = subtasks;
+  }
   addSubtask(subtask) {
-    this._subtasks.push(subtask);
+    subtask.parentTask = this;
+    if (!this.subtasks) {
+      this.subtasks = [];
+    }
+    this.subtasks.push(subtask);
   }
   deleteSubtask(subtask) {
-    this._subtasks.splice(this._subtasks.indexOf(subtask), 1);
+    this.subtasks.splice(this.subtasks.indexOf(subtask), 1);
   }
 }
 
 class View {
   constructor() {
+    this._currentTab = "ongoing";
     this._tasks = document.querySelector(".tasks");
     this.renderTasks();
     this.init();
   }
+  get currentTab() {
+    return this._currentTab;
+  }
+  set currentTab(currentTab) {
+    this._currentTab = currentTab;
+  }
+  get tasks() {
+    return this._tasks;
+  }
+  set tasks(tasks) {
+    this._tasks = tasks;
+  }
   init() {
+    // new button
     document
       .querySelector(".main-header__new-button")
       .addEventListener("click", (e) => {
@@ -120,22 +162,47 @@ class View {
         // render view
         //
       });
+
+    // tabs
+    Array.from(document.querySelector(".main-header__tabs").children).forEach(
+      (tab) => {
+        tab.addEventListener("click", (e) => {
+          e.preventDefault();
+          this.currentTab = e.target.textContent.toLowerCase();
+          this.renderTasks();
+        });
+      }
+    );
   }
   renderTasks() {
-    // reset tasks
-    this._tasks.innerHTML = "";
+    // reset
+    this.tasks.innerHTML = "";
 
     // render tasks
     app.tasks.forEach((task) => {
-      const taskElement = TaskElement(task);
-      this._tasks.appendChild(taskElement);
+      if (this.currentTab === "ongoing" && !task.complete) {
+        const taskElement = TaskElement(task);
+        this.tasks.appendChild(taskElement);
+      } else if (this.currentTab === "archive" && task.complete) {
+        const taskElement = TaskElement(task);
+        this.tasks.appendChild(taskElement);
+      }
     });
   }
 }
 
 const app = new App();
+
 const defaultProject = new Task("First project", "This is my first project.");
 app.addTask(defaultProject);
-// console.log(app.tasks);
+
+const secondProject = new Task("Second project", "This is my second project.");
+const subtask = new Task("Subtask", "This is my subtask.");
+const subtask2 = new Task("subtask 2", "This is my subtask 2.");
+secondProject.addSubtask(subtask);
+secondProject.addSubtask(subtask2);
+subtask.complete = true;
+subtask2.complete = true;
+app.addTask(secondProject);
 
 const view = new View();
