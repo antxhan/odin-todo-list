@@ -2,6 +2,7 @@
   /* COLORS */
   --clr-neutral-000: #ffffff;
   --clr-neutral-100: #e3e3e3;
+  --clr-neutral-700: #2e2e2e;
   --clr-neutral-800: #1f1f1f;
   --clr-neutral-900: #000000;
 
@@ -129,12 +130,15 @@ main > .container {
 .task {
   position: relative;
   background-color: var(--clr-neutral-800);
+  border-radius: 0.5rem;
   padding: 1rem;
   display: grid;
   grid-template-columns: 1fr max-content;
   grid-template-rows: auto 1fr;
   gap: 0.5rem;
   &:hover {
+    cursor: pointer;
+    background-color: var(--clr-neutral-700);
     .task__buttons {
       display: flex;
     }
