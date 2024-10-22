@@ -163,12 +163,9 @@ class View {
     // handle new task dialog
     newTaskDialog.querySelectorAll("button").forEach((button) => {
       button.addEventListener("click", (e) => {
-        e.preventDefault();
+        // e.preventDefault();
 
         if (button.type === "submit") {
-          // validate form data
-          //
-
           const titleInput = newTaskDialog.querySelector("input[name=title]");
           const descriptionInput = newTaskDialog.querySelector(
             "input[name=description]"
@@ -180,21 +177,28 @@ class View {
             "select[name=priority]"
           );
 
-          // create new Task from data
-          const task = new Task(
-            titleInput.value,
-            descriptionInput.value,
-            dueDateInput.value,
-            prioritySelect.value
-          );
+          // validate form data
+          if (newTaskDialog.querySelector("form").checkValidity()) {
+            // create new Task from data
+            const task = new Task(
+              titleInput.value,
+              descriptionInput.value,
+              dueDateInput.value,
+              prioritySelect.value
+            );
 
-          // add new Task to currentTask.tasks
-          this.currentTask.addTask(task);
+            // add new Task to currentTask.tasks
+            this.currentTask.addTask(task);
+
+            // close
+            newTaskDialog.close();
+            newTaskDialog.querySelector("form").reset();
+          }
+        } else {
+          // close
+          newTaskDialog.close();
+          newTaskDialog.querySelector("form").reset();
         }
-
-        // close
-        newTaskDialog.close();
-        newTaskDialog.querySelector("form").reset();
 
         // render view
         this.renderTasks();
@@ -216,6 +220,21 @@ class View {
         this.renderTasks();
       });
     });
+
+    // hiding context menu
+    document.addEventListener("click", (e) => {
+      this.hideContextMenu();
+    });
+    window.addEventListener("resize", () => {
+      this.hideContextMenu();
+    });
+  }
+  hideContextMenu() {
+    const contextMenu = document.querySelector(".context-menu");
+    if (contextMenu) {
+      contextMenu.setAttribute("aria-visible", "false");
+      contextMenu.removeAttribute("style");
+    }
   }
   renderTasks() {
     // reset
