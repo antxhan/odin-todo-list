@@ -24,6 +24,7 @@ export default function Task(task) {
         text: "Delete",
         icon: deleteIcon,
         onClick: () => {
+          task.delete();
           console.log("delete");
         },
       },

@@ -2,24 +2,6 @@ import TaskElement from "./components/task";
 import "./styles/global.css";
 import placeholderIcon from "./assets/images/placeholder.png";
 
-class App {
-  constructor(tasks = []) {
-    this._tasks = tasks;
-  }
-  get tasks() {
-    return this._tasks;
-  }
-  set tasks(tasks) {
-    this._tasks = tasks;
-  }
-  addTask(task) {
-    this.tasks.push(task);
-  }
-  deleteTask(task) {
-    this.tasks.splice(this.tasks.indexOf(task), 1);
-  }
-}
-
 class Task {
   constructor(
     title = "Untitled", // string
@@ -110,6 +92,10 @@ class Task {
   }
   set subtasks(subtasks) {
     this._subtasks = subtasks;
+  }
+  delete() {
+    console.log("i was called");
+    this.parentTask.deleteSubtask(this);
   }
   addSubtask(subtask) {
     subtask.parentTask = this;
@@ -241,22 +227,22 @@ class View {
     this.tasks.innerHTML = "";
 
     // render tasks
-    this.currentTask.tasks.forEach((task) => {
+    this.currentTask.subtasks.forEach((task) => {
       if (this.currentTab.value === "ongoing" && !task.complete) {
         const taskElement = TaskElement(task);
-        this.tasks.appendChild(taskElement);
+        this.tasks.originendChild(taskElement);
       } else if (this.currentTab.value === "archive" && task.complete) {
         const taskElement = TaskElement(task);
-        this.tasks.appendChild(taskElement);
+        this.tasks.originendChild(taskElement);
       }
     });
   }
 }
 
-const app = new App();
+const origin = new Task();
 
 const defaultProject = new Task("First project", "This is my first project.");
-app.addTask(defaultProject);
+origin.addSubtask(defaultProject);
 
 const secondProject = new Task("Second project", "This is my second project.");
 const subtask = new Task("Subtask", "This is my subtask.");
@@ -265,6 +251,6 @@ secondProject.addSubtask(subtask);
 secondProject.addSubtask(subtask2);
 subtask.complete = true;
 subtask2.complete = true;
-app.addTask(secondProject);
+origin.addSubtask(secondProject);
 
-const view = new View(app);
+const view = new View(origin);
