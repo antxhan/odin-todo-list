@@ -36,9 +36,9 @@ class Task {
     this._updatedAt = this._createdAt;
     this._dueDate = dueDate;
     this._priority = priority;
-    this._parentTask = null;
-    this._subtasks = null; // array or null
-    this._complete = false; // boolean, based on subtasks completedness
+    this._parentTask = null; // Task || null
+    this._subtasks = null; // array || null
+    this._complete = false; // boolean
   }
   get id() {
     return this._id;
@@ -124,11 +124,20 @@ class Task {
 }
 
 class View {
-  constructor() {
-    this._currentTab = "ongoing";
+  constructor(task) {
+    this._currentTask = task;
+    this._currentTab = document.querySelector(
+      ".main-header__tabs button[aria-current='true']"
+    );
     this._tasks = document.querySelector(".tasks");
     this.renderTasks();
     this.init();
+  }
+  get currentTask() {
+    return this._currentTask;
+  }
+  set currentTask(task) {
+    this._currentTask = task;
   }
   get currentTab() {
     return this._currentTab;
@@ -143,47 +152,81 @@ class View {
     this._tasks = tasks;
   }
   init() {
-    // new button
+    // new task button
+    const newTaskDialog = document.querySelector(".new-task-dialog");
     document
       .querySelector(".main-header__new-button")
       .addEventListener("click", (e) => {
-        e.preventDefault();
-        const newTaskDialog = document.querySelector(".new-task-dialog");
         newTaskDialog.showModal();
-
-        // validate form data
-        //
-
-        // create new Task from data
-        const task = new Task();
-
-        // add new Task to app.tasks
-        //
-        // render view
-        //
       });
 
+    // handle new task dialog
+    newTaskDialog.querySelectorAll("button").forEach((button) => {
+      button.addEventListener("click", (e) => {
+        e.preventDefault();
+
+        if (button.type === "submit") {
+          // validate form data
+          //
+
+          const titleInput = newTaskDialog.querySelector("input[name=title]");
+          const descriptionInput = newTaskDialog.querySelector(
+            "input[name=description]"
+          );
+          const dueDateInput = newTaskDialog.querySelector(
+            "input[name=dueDate]"
+          );
+          const prioritySelect = newTaskDialog.querySelector(
+            "select[name=priority]"
+          );
+
+          // create new Task from data
+          const task = new Task(
+            titleInput.value,
+            descriptionInput.value,
+            dueDateInput.value,
+            prioritySelect.value
+          );
+
+          // add new Task to currentTask.tasks
+          this.currentTask.addTask(task);
+        }
+
+        // close
+        newTaskDialog.close();
+        newTaskDialog.querySelector("form").reset();
+
+        // render view
+        this.renderTasks();
+      });
+    });
+
     // tabs
-    Array.from(document.querySelector(".main-header__tabs").children).forEach(
-      (tab) => {
-        tab.addEventListener("click", (e) => {
-          e.preventDefault();
-          this.currentTab = e.target.textContent.toLowerCase();
-          this.renderTasks();
-        });
-      }
+    const tabs = Array.from(
+      document.querySelector(".main-header__tabs").children
     );
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", (e) => {
+        // reset tab highlight
+        tabs.forEach((tab) => {
+          tab.setAttribute("aria-current", "false");
+        });
+        e.currentTarget.setAttribute("aria-current", "true");
+        this.currentTab = e.currentTarget;
+        this.renderTasks();
+      });
+    });
   }
   renderTasks() {
     // reset
     this.tasks.innerHTML = "";
 
     // render tasks
-    app.tasks.forEach((task) => {
-      if (this.currentTab === "ongoing" && !task.complete) {
+    this.currentTask.tasks.forEach((task) => {
+      if (this.currentTab.value === "ongoing" && !task.complete) {
         const taskElement = TaskElement(task);
         this.tasks.appendChild(taskElement);
-      } else if (this.currentTab === "archive" && task.complete) {
+      } else if (this.currentTab.value === "archive" && task.complete) {
         const taskElement = TaskElement(task);
         this.tasks.appendChild(taskElement);
       }
@@ -205,4 +248,4 @@ subtask.complete = true;
 subtask2.complete = true;
 app.addTask(secondProject);
 
-const view = new View();
+const view = new View(app);
