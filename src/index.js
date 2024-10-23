@@ -230,10 +230,10 @@ class View {
     this.currentTask.subtasks.forEach((task) => {
       if (this.currentTab.value === "ongoing" && !task.complete) {
         const taskElement = TaskElement(task);
-        this.tasks.originendChild(taskElement);
+        this.tasks.appendChild(taskElement);
       } else if (this.currentTab.value === "archive" && task.complete) {
         const taskElement = TaskElement(task);
-        this.tasks.originendChild(taskElement);
+        this.tasks.appendChild(taskElement);
       }
     });
   }
