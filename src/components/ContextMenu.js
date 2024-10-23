@@ -8,10 +8,7 @@ export default function ContextMenu(options) {
 
   options.forEach((option) => {
     const menuItem = document.createElement("li");
-    const menuItemIcon = document.createElement("img");
-    menuItemIcon.src = option.icon;
-    menuItemIcon.alt = option.text;
-    menuItem.appendChild(menuItemIcon);
+    menuItem.innerHTML = option.icon;
     const textContent = document.createTextNode(option.text);
     menuItem.appendChild(textContent);
     menuItem.addEventListener("click", option.onClick);
