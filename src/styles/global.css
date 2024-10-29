@@ -1,7 +1,8 @@
 :root {
   /* COLORS */
   --clr-neutral-000: #ffffff;
-  --clr-neutral-100: #e3e3e3;
+  --clr-neutral-100: #e0e0e0;
+  --clr-neutral-200: #c8c8c8;
   --clr-neutral-700: #2e2e2e;
   --clr-neutral-800: #1f1f1f;
   --clr-neutral-900: #000000;
@@ -85,7 +86,7 @@ main > .container {
   gap: 0.25rem;
   background: none;
   border: none;
-  color: var(--clr-neutral-100);
+  color: var(--clr-neutral-200);
   svg {
     width: 1rem;
   }
@@ -100,7 +101,7 @@ main > .container {
 }
 
 .task__description {
-  color: var(--clr-neutral-100);
+  color: var(--clr-neutral-200);
 }
 
 .main-header__tabs {
@@ -112,7 +113,7 @@ main > .container {
     align-items: center;
     gap: 0.25rem;
     padding: 0.25rem 0.25rem;
-    color: var(--clr-neutral-100);
+    color: var(--clr-neutral-200);
     background: none;
     border: none;
     position: relative;
@@ -128,6 +129,9 @@ main > .container {
     }
     svg {
       width: 1rem;
+    }
+    &:hover {
+      color: var(--clr-neutral-000);
     }
   }
   button[aria-current="true"] {
