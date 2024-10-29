@@ -5,7 +5,7 @@ class Task {
     title,
     description = "",
     dueDate = null,
-    completed = false,
+    complete = false,
     parentTask = null,
     subtasks = [],
     id = new Date()
@@ -13,7 +13,7 @@ class Task {
     this.title = title;
     this.description = description;
     this.dueDate = dueDate;
-    this.completed = completed;
+    this.complete = complete;
     this.parentTask = parentTask;
     this.subtasks = subtasks;
     this.id = id;
@@ -146,14 +146,14 @@ class View {
           subtask.subtasks.length > 0
             ? `<p class="subtask__status">${
                 (subtask.subtasks.reduce(
-                  (acc, subtask) => acc + subtask.completed,
+                  (acc, subtask) => acc + subtask.complete,
                   0
                 ) /
                   subtask.subtasks.length) *
                 100
               }%</p>`
             : `<input class="subtask__status" type="checkbox" ${
-                subtask.completed ? "checked" : ""
+                subtask.complete ? "checked" : ""
               } >`
         }
         </li>
@@ -182,6 +182,15 @@ class View {
       addSubtaskButton.addEventListener("click", handler);
     }
   }
+  bindCompleteSubtask(handler) {
+    const subtasks = this.subtasksContainer.querySelectorAll(".subtask");
+    subtasks.forEach((subtask, index) => {
+      const checkbox = subtask.querySelector('input[type="checkbox"');
+      if (checkbox) {
+        checkbox.addEventListener("change", (e) => handler(e, index));
+      }
+    });
+  }
 }
 
 class Controller {
@@ -195,6 +204,7 @@ class Controller {
     this.view.bindClickParentTask(this.handleClickParentTask.bind(this));
     this.view.bindClickSubtask(this.handleClickSubtask.bind(this));
     this.view.bindAddSubtask(this.handleAddSubtask.bind(this));
+    this.view.bindCompleteSubtask(this.handleCompleteSubtask.bind(this));
   }
   handleClickParentTask() {
     this.task = this.task.parentTask;
@@ -235,6 +245,11 @@ class Controller {
         dialog.close();
       }
     });
+  }
+  handleCompleteSubtask(e, subtaskIndex) {
+    const subtask = this.task.subtasks[subtaskIndex];
+    subtask.complete = !subtask.complete;
+    this.updateView();
   }
 }
 
