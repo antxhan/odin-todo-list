@@ -218,19 +218,22 @@ class Controller {
     });
 
     const addButton = dialog.querySelector('button[type="submit"');
-    addButton.addEventListener("click", () => {
-      if (dialog.querySelector("form").checkValidity() === false) {
+    addButton.addEventListener("click", (e) => {
+      const form = dialog.querySelector("form");
+      if (!form.checkValidity()) {
         return;
+      } else {
+        const title = dialog.querySelector('input[name="title"').value;
+        const description = dialog.querySelector(
+          'input[name="description"'
+        ).value;
+        const dueDate = dialog.querySelector('input[name="dueDate"').value;
+        const task = new Task(title, description, dueDate);
+        this.task.addSubtask(task);
+        this.updateView();
+        form.reset();
+        dialog.close();
       }
-      const title = dialog.querySelector('input[name="title"').value;
-      const description = dialog.querySelector(
-        'input[name="description"'
-      ).value;
-      const dueDate = dialog.querySelector('input[name="dueDate"').value;
-      const task = new Task(title, description, dueDate);
-      this.task.addSubtask(task);
-      this.updateView();
-      dialog.close();
     });
   }
 }
