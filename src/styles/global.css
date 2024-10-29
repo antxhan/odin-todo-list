@@ -74,8 +74,13 @@ main > .container {
 
 .main-header {
   display: grid;
-  grid-template-columns: auto auto;
-  grid-template-rows: auto auto auto;
+  grid-template-columns: auto 1fr;
+  & > * {
+    grid-column: span 2;
+  }
+  & > *:last-child {
+    grid-column: span 1;
+  }
   gap: 0.5rem;
 }
 
@@ -96,16 +101,11 @@ main > .container {
   }
 }
 
-.task__title {
-  grid-column: span 2;
-}
-
 .task__description {
   color: var(--clr-neutral-200);
 }
 
 .main-header__tabs {
-  grid-column: 1;
   display: flex;
   gap: 0.25rem;
   button {
@@ -148,11 +148,17 @@ main > .container {
 }
 
 .main-header__new-button {
-  grid-column: 2;
+  /* grid-column: 2; */
+  /* grid-row: 5; */
+  grid-column: span 1;
+  order: 1;
+  display: inline;
   justify-self: end;
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   border: none;
+  width: max-content;
+  /* order: 6; */
 }
 
 .subtasks {

@@ -45,12 +45,13 @@ class View {
     this.renderParentTask();
     this.renderTitle();
     this.renderDescription();
+    this.renderTabs();
     this.renderSubtasks();
   }
   renderParentTask() {
-    const parentTaskElements = document.querySelector(".task__parent-task");
-    if (parentTaskElements) {
-      parentTaskElements.remove();
+    const parentTaskElement = document.querySelector(".task__parent-task");
+    if (parentTaskElement) {
+      parentTaskElement.remove();
     }
     if (this.task.parentTask) {
       const html = `
@@ -65,10 +66,69 @@ class View {
     this.taskTitleContainer.innerHTML = this.task.title;
   }
   renderDescription() {
-    this.taskDescriptionContainer.style.display = "block";
-    this.taskDescriptionContainer.innerHTML = this.task.description;
-    if (!this.task.description) {
-      this.taskDescriptionContainer.style.display = "none";
+    const descriptionElement = document.querySelector(".task__description");
+    if (descriptionElement) {
+      descriptionElement.remove();
+    }
+    if (this.task.description) {
+      const html = `
+      <p class="task__description">
+        ${this.task.description}
+      </p>
+      `;
+      this.taskHeader.insertAdjacentHTML("beforeend", html);
+    }
+  }
+  renderTabs() {
+    const tabs = document.querySelector(".main-header__tabs");
+    if (tabs) {
+      tabs.remove();
+    }
+    if (this.task.subtasks.length !== 0) {
+      const html = `
+      <span class="main-header__tabs">
+        <button value="ongoing" aria-current="true">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="icon icon-tabler icons-tabler-outline icon-tabler-player-play"
+          >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M7 4v16l13 -8z" />
+          </svg>
+          Doing
+        </button>
+        <button value="archive">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="icon icon-tabler icons-tabler-outline icon-tabler-checkbox"
+          >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M9 11l3 3l8 -8" />
+            <path
+              d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9"
+            />
+          </svg>
+          Done
+        </button>
+      </span>
+      `;
+      this.taskHeader.insertAdjacentHTML("beforeend", html);
     }
   }
   renderSubtasks() {
@@ -114,6 +174,14 @@ class View {
       subtask.addEventListener("click", (e) => handler(e, index));
     });
   }
+  bindAddSubtask(handler) {
+    const addSubtaskButton = this.taskHeader.querySelector(
+      ".main-header__new-button"
+    );
+    if (addSubtaskButton) {
+      addSubtaskButton.addEventListener("click", handler);
+    }
+  }
 }
 
 class Controller {
@@ -126,6 +194,7 @@ class Controller {
     this.view.render(this.task);
     this.view.bindClickParentTask(this.handleClickParentTask.bind(this));
     this.view.bindClickSubtask(this.handleClickSubtask.bind(this));
+    this.view.bindAddSubtask(this.handleAddSubtask.bind(this));
   }
   handleClickParentTask() {
     this.task = this.task.parentTask;
@@ -139,13 +208,38 @@ class Controller {
     this.task = subtask;
     this.updateView();
   }
+  handleAddSubtask() {
+    const dialog = document.querySelector(".new-task-dialog");
+    dialog.showModal();
+
+    const closeButton = dialog.querySelector('button[type="reset"');
+    closeButton.addEventListener("click", () => {
+      dialog.close();
+    });
+
+    const addButton = dialog.querySelector('button[type="submit"');
+    addButton.addEventListener("click", () => {
+      if (dialog.querySelector("form").checkValidity() === false) {
+        return;
+      }
+      const title = dialog.querySelector('input[name="title"').value;
+      const description = dialog.querySelector(
+        'input[name="description"'
+      ).value;
+      const dueDate = dialog.querySelector('input[name="dueDate"').value;
+      const task = new Task(title, description, dueDate);
+      this.task.addSubtask(task);
+      this.updateView();
+      dialog.close();
+    });
+  }
 }
 
 const task = new Task("Home", "", new Date());
 
 // just for development testing
 task.addSubtask(new Task("task 1", "lorem", new Date()));
-task.addSubtask(new Task("task 2", "", new Date()));
+task.addSubtask(new Task("task 2", "thingy", new Date()));
 task.subtasks[0].addSubtask(new Task("task 1", "desc", new Date()));
 task.subtasks[0].addSubtask(new Task("task 2", "desc", new Date(), true));
 
