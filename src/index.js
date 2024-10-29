@@ -174,7 +174,7 @@ class View {
             );
 
             // add new Task to currentTask.tasks
-            this.currentTask.addTask(task);
+            this.currentTask.addSubtask(task);
 
             // close
             newTaskDialog.close();

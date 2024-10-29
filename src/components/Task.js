@@ -1,6 +1,4 @@
 import placeholderIcon from "../assets/images/placeholder.png";
-import duplicateIcon from "../assets/icons/copy.svg";
-import deleteIcon from "../assets/icons/trash.svg";
 import ContextMenu from "./ContextMenu";
 
 export default function Task(task) {
@@ -33,7 +31,6 @@ export default function Task(task) {
     menu.setAttribute("aria-visible", "true");
 
     if (window.innerWidth > 600) {
-      console.log(window.innerWidth);
       menu.style.left = `${e.clientX}px`;
       menu.style.top = `${e.clientY}px`;
     } else {
