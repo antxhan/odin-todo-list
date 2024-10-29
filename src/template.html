@@ -14,7 +14,8 @@
     <main>
       <div class="container">
         <div class="main-header">
-          <h2>Tasks</h2>
+          <h2 class="task__title">Tasks</h2>
+          <p class="task__description"></p>
           <div class="main-header__tabs">
             <button value="ongoing" aria-current="true">
               <svg
@@ -32,7 +33,7 @@
                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                 <path d="M7 4v16l13 -8z" />
               </svg>
-              Ongoing
+              Doing
             </button>
             <button value="archive">
               <svg
@@ -53,7 +54,7 @@
                   d="M20 12v6a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h9"
                 />
               </svg>
-              Archive
+              Done
             </button>
           </div>
           <button class="main-header__new-button">New</button>
@@ -90,7 +91,7 @@
             <button type="submit">Add</button>
           </form>
         </dialog>
-        <div class="tasks"></div>
+        <ul class="subtasks"></ul>
       </div>
     </main>
     <footer>Made by Anton</footer>

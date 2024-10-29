@@ -74,8 +74,16 @@ main > .container {
 .main-header {
   display: grid;
   grid-template-columns: auto auto;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto auto;
   gap: 0.5rem;
+}
+
+.task__title {
+  grid-column: span 2;
+}
+
+.task__description {
+  color: var(--clr-neutral-100);
 }
 
 .main-header__tabs {
@@ -126,19 +134,21 @@ main > .container {
   border: none;
 }
 
-.tasks {
+.subtasks {
   display: grid;
   gap: 1rem;
 }
 
-.task {
+.subtask {
   position: relative;
   background-color: var(--clr-neutral-800);
+  align-items: center;
   border-radius: 0.5rem;
   padding: 1rem;
   display: grid;
   grid-template-columns: 1fr max-content;
-  grid-template-rows: auto 1fr;
+  /* grid-template-rows: auto 1fr; */
+  /* grid-template-rows: auto; */
   gap: 0.5rem;
   &:hover {
     cursor: pointer;
@@ -149,7 +159,7 @@ main > .container {
   }
 }
 
-.task__title {
+.subtask__title {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -158,7 +168,7 @@ main > .container {
   }
 }
 
-.task__description {
+.subtask__description {
   grid-row: 2;
   white-space: nowrap;
   overflow: hidden;
@@ -166,7 +176,7 @@ main > .container {
   max-width: 100%;
 }
 
-.task__status {
+.subtask__status {
   grid-row: span 2;
   align-self: center;
   /* border: 1px solid white; */
