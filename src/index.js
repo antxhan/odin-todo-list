@@ -19,6 +19,7 @@ class Task {
     this.id = id;
   }
   addSubtask(task) {
+    task.parentTask = this;
     this.subtasks.push(task);
   }
   deleteSubtask(taskId) {
@@ -41,9 +42,24 @@ class View {
   }
   render(task) {
     this.task = task;
+    this.renderParentTask();
     this.renderTitle();
     this.renderDescription();
     this.renderSubtasks();
+  }
+  renderParentTask() {
+    const parentTaskElements = document.querySelector(".task__parent-task");
+    if (parentTaskElements) {
+      parentTaskElements.remove();
+    }
+    if (this.task.parentTask) {
+      const html = `
+      <button class="task__parent-task">
+      <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M5 12l6 6" /><path d="M5 12l6 -6" /></svg>
+      ${this.task.parentTask.title}
+      `;
+      this.taskHeader.insertAdjacentHTML("afterbegin", html);
+    }
   }
   renderTitle() {
     this.taskTitleContainer.innerHTML = this.task.title;
@@ -86,6 +102,12 @@ class View {
         .join("")}
     `;
   }
+  bindClickParentTask(handler) {
+    const parentTask = this.taskHeader.querySelector(".task__parent-task");
+    if (parentTask) {
+      parentTask.addEventListener("click", handler);
+    }
+  }
   bindClickSubtask(handler) {
     const subtasks = this.subtasksContainer.querySelectorAll(".subtask");
     subtasks.forEach((subtask, index) => {
@@ -102,7 +124,12 @@ class Controller {
   }
   updateView() {
     this.view.render(this.task);
+    this.view.bindClickParentTask(this.handleClickParentTask.bind(this));
     this.view.bindClickSubtask(this.handleClickSubtask.bind(this));
+  }
+  handleClickParentTask() {
+    this.task = this.task.parentTask;
+    this.updateView();
   }
   handleClickSubtask(e, subtaskIndex) {
     if (e.target.type === "checkbox") {
@@ -114,17 +141,13 @@ class Controller {
   }
 }
 
-const task = new Task("Master Task", "", new Date());
+const task = new Task("Home", "", new Date());
 
-task.subtasks = [
-  new Task("task 1", "desc", new Date()),
-  new Task("task 2", "", new Date()),
-];
-
-task.subtasks[0].subtasks = [
-  new Task("task 1", "desc", new Date()),
-  new Task("task 2", "desc", new Date(), true),
-];
+// just for development testing
+task.addSubtask(new Task("task 1", "lorem", new Date()));
+task.addSubtask(new Task("task 2", "", new Date()));
+task.subtasks[0].addSubtask(new Task("task 1", "desc", new Date()));
+task.subtasks[0].addSubtask(new Task("task 2", "desc", new Date(), true));
 
 const view = new View();
 const controller = new Controller(task, view);

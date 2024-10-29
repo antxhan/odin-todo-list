@@ -78,6 +78,23 @@ main > .container {
   gap: 0.5rem;
 }
 
+.task__parent-task {
+  width: max-content;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  color: var(--clr-neutral-100);
+  svg {
+    width: 1rem;
+  }
+  &:hover {
+    cursor: pointer;
+    color: var(--clr-neutral-000);
+  }
+}
+
 .task__title {
   grid-column: span 2;
 }
