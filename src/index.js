@@ -33,7 +33,7 @@ class Task {
 class View {
   constructor() {
     this.task = undefined;
-    this.currentTab = "ongoing";
+    this.currentTab = "doing";
     this.taskHeader = document.querySelector(".main-header");
     this.taskTitleContainer = document.querySelector(".task__title");
     this.taskDescriptionContainer =
@@ -87,7 +87,9 @@ class View {
     if (this.task.subtasks.length !== 0) {
       const html = `
       <span class="main-header__tabs">
-        <button value="ongoing" aria-current="true">
+        <button value="doing" aria-current="${
+          this.currentTab === "doing" ? "true" : "false"
+        }">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -105,7 +107,9 @@ class View {
           </svg>
           Doing
         </button>
-        <button value="archive">
+        <button value="done" aria-current="${
+          this.currentTab === "done" ? "true" : "false"
+        }">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -139,58 +143,50 @@ class View {
       return;
     }
 
-    if (this.currentTab === "ongoing") {
-      // only render non-completed subtasks
-    }
+    const subtaskComponent = (subtask) => {
+      return `
+        <li class="subtask">
+          <h3 class="subtask__title">${subtask.title}</h3>
+        ${
+          subtask.subtasks.length > 0
+            ? `<p class="subtask__status">${
+                (subtask.subtasks.reduce(
+                  (acc, subtask) => acc + subtask.complete,
+                  0
+                ) /
+                  subtask.subtasks.length) *
+                100
+              }%</p>`
+            : `<input class="subtask__status" type="checkbox" ${
+                subtask.complete ? "checked" : ""
+              } >`
+        }
+        </li>
+        `;
+    };
 
     // populates subtasks
     this.subtasksContainer.innerHTML = `
       ${this.task.subtasks
         .map((subtask) => {
-          if (this.currentTab === "ongoing" && !subtask.complete) {
-            return `
-        <li class="subtask">
-          <h3 class="subtask__title">${subtask.title}</h3>
-        ${
-          subtask.subtasks.length > 0
-            ? `<p class="subtask__status">${
-                (subtask.subtasks.reduce(
-                  (acc, subtask) => acc + subtask.complete,
-                  0
-                ) /
-                  subtask.subtasks.length) *
-                100
-              }%</p>`
-            : `<input class="subtask__status" type="checkbox" ${
-                subtask.complete ? "checked" : ""
-              } >`
-        }
-        </li>
-        `;
-          } else if (this.currentTab === "completed" && subtask.complete) {
-            return `
-        <li class="subtask">
-          <h3 class="subtask__title">${subtask.title}</h3>
-        ${
-          subtask.subtasks.length > 0
-            ? `<p class="subtask__status">${
-                (subtask.subtasks.reduce(
-                  (acc, subtask) => acc + subtask.complete,
-                  0
-                ) /
-                  subtask.subtasks.length) *
-                100
-              }%</p>`
-            : `<input class="subtask__status" type="checkbox" ${
-                subtask.complete ? "checked" : ""
-              } >`
-        }
-        </li>
-        `;
+          if (this.currentTab === "doing" && !subtask.complete) {
+            return subtaskComponent(subtask);
+          } else if (this.currentTab === "done" && subtask.complete) {
+            return subtaskComponent(subtask);
           }
         })
         .join("")}
     `;
+  }
+  bindClickTab(handler) {
+    const tabs = this.taskHeader.querySelector(".main-header__tabs");
+    if (!tabs) {
+      return;
+    }
+    const tabButtons = tabs.querySelectorAll("button");
+    tabButtons.forEach((tabButton) => {
+      tabButton.addEventListener("click", (e) => handler(e));
+    });
   }
   bindClickParentTask(handler) {
     const parentTask = this.taskHeader.querySelector(".task__parent-task");
@@ -233,6 +229,7 @@ class Controller {
     this.view.render(this.task);
     this.view.bindClickParentTask(this.handleClickParentTask.bind(this));
     this.view.bindClickSubtask(this.handleClickSubtask.bind(this));
+    this.view.bindClickTab(this.handleClickTab.bind(this));
     this.view.bindAddSubtask(this.handleAddSubtask.bind(this));
     this.view.bindCompleteSubtask(this.handleCompleteSubtask.bind(this));
   }
@@ -282,6 +279,11 @@ class Controller {
     // if (this.task.subtasks.filter((subtask) => subtask.complete).length === 0) {
     //   this.task.complete = true;
     // }
+    this.updateView();
+  }
+  handleClickTab(e) {
+    const tab = e.target.value;
+    this.view.currentTab = tab;
     this.updateView();
   }
 }
