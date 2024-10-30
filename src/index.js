@@ -219,7 +219,9 @@ class View {
     subtasks.forEach((subtask, index) => {
       const checkbox = subtask.querySelector('input[type="checkbox"');
       if (checkbox) {
-        checkbox.addEventListener("change", (e) => handler(e, index));
+        checkbox.addEventListener("change", (e) =>
+          handler(e, index, this.currentTab)
+        );
       }
     });
   }
@@ -295,8 +297,20 @@ class Controller {
       }
     });
   }
-  handleCompleteSubtask(e, subtaskIndex) {
-    const subtask = this.task.subtasks[subtaskIndex];
+  handleCompleteSubtask(e, subtaskIndex, currentTab) {
+    // const subtask = this.task.subtasks[subtaskIndex];
+    let subtask;
+    if (currentTab === DONE_TAB) {
+      const completedSubtasks = this.task.subtasks.filter(
+        (subtask) => subtask.complete
+      );
+      subtask = completedSubtasks[subtaskIndex];
+    } else if (currentTab === DOING_TAB) {
+      const notCompletedSubtasks = this.task.subtasks.filter(
+        (subtask) => !subtask.complete
+      );
+      subtask = notCompletedSubtasks[subtaskIndex];
+    }
     subtask.complete = !subtask.complete;
     // if (this.task.subtasks.filter((subtask) => subtask.complete).length === 0) {
     //   this.task.complete = true;
