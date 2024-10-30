@@ -1,5 +1,8 @@
 import "./styles/global.css";
 
+const DOING_TAB = "doing";
+const DONE_TAB = "done";
+
 class Task {
   constructor(
     title,
@@ -34,7 +37,7 @@ class Task {
 class View {
   constructor() {
     this.task = undefined;
-    this.currentTab = "doing";
+    this.currentTab = DOING_TAB;
     this.taskHeader = document.querySelector(".main-header");
     this.taskTitleContainer = document.querySelector(".task__title");
     this.taskDescriptionContainer =
@@ -88,9 +91,9 @@ class View {
     if (this.task.subtasks.length !== 0) {
       const html = `
       <span class="main-header__tabs">
-        <button value="doing" aria-current="${
-          this.currentTab === "doing" ? "true" : "false"
-        }">
+        <button value="${DOING_TAB}" aria-current="${
+        this.currentTab === DOING_TAB ? "true" : "false"
+      }">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -108,9 +111,9 @@ class View {
           </svg>
           Doing
         </button>
-        <button value="done" aria-current="${
-          this.currentTab === "done" ? "true" : "false"
-        }">
+        <button value="${DONE_TAB}" aria-current="${
+        this.currentTab === DONE_TAB ? "true" : "false"
+      }">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -170,9 +173,9 @@ class View {
     this.subtasksContainer.innerHTML = `
       ${this.task.subtasks
         .map((subtask) => {
-          if (this.currentTab === "doing" && !subtask.complete) {
+          if (this.currentTab === DOING_TAB && !subtask.complete) {
             return subtaskComponent(subtask);
-          } else if (this.currentTab === "done" && subtask.complete) {
+          } else if (this.currentTab === DONE_TAB && subtask.complete) {
             return subtaskComponent(subtask);
           }
         })
@@ -238,6 +241,7 @@ class Controller {
   }
   handleClickParentTask() {
     this.task = this.task.parentTask;
+    this.view.currentTab = DOING_TAB;
     this.updateView();
   }
   handleClickSubtask(e, subtaskIndex, currentTab) {
@@ -246,18 +250,21 @@ class Controller {
     }
 
     let subtask;
-    if (currentTab === "done") {
+    if (currentTab === DONE_TAB) {
       const completedSubtasks = this.task.subtasks.filter(
         (subtask) => subtask.complete
       );
       subtask = completedSubtasks[subtaskIndex];
-    } else if (currentTab === "doing") {
+    } else if (currentTab === DOING_TAB) {
       const notCompletedSubtasks = this.task.subtasks.filter(
         (subtask) => !subtask.complete
       );
       subtask = notCompletedSubtasks[subtaskIndex];
     }
     this.task = subtask;
+
+    // updating view
+    this.view.currentTab = DOING_TAB;
     this.updateView();
   }
   handleAddSubtask() {
