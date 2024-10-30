@@ -8,7 +8,8 @@ class Task {
     complete = false,
     parentTask = null,
     subtasks = [],
-    id = new Date()
+    id = title.split(" ").join("_").toString(8) +
+      Math.random().toString(16).slice(2)
   ) {
     this.title = title;
     this.description = description;
@@ -197,7 +198,9 @@ class View {
   bindClickSubtask(handler) {
     const subtasks = this.subtasksContainer.querySelectorAll(".subtask");
     subtasks.forEach((subtask, index) => {
-      subtask.addEventListener("click", (e) => handler(e, index));
+      subtask.addEventListener("click", (e) =>
+        handler(e, index, this.currentTab)
+      );
     });
   }
   bindAddSubtask(handler) {
@@ -237,11 +240,23 @@ class Controller {
     this.task = this.task.parentTask;
     this.updateView();
   }
-  handleClickSubtask(e, subtaskIndex) {
+  handleClickSubtask(e, subtaskIndex, currentTab) {
     if (e.target.type === "checkbox") {
       return;
     }
-    const subtask = this.task.subtasks[subtaskIndex];
+
+    let subtask;
+    if (currentTab === "done") {
+      const completedSubtasks = this.task.subtasks.filter(
+        (subtask) => subtask.complete
+      );
+      subtask = completedSubtasks[subtaskIndex];
+    } else if (currentTab === "doing") {
+      const notCompletedSubtasks = this.task.subtasks.filter(
+        (subtask) => !subtask.complete
+      );
+      subtask = notCompletedSubtasks[subtaskIndex];
+    }
     this.task = subtask;
     this.updateView();
   }
@@ -295,6 +310,9 @@ task.addSubtask(new Task("task 1", "lorem", new Date()));
 task.addSubtask(new Task("task 2", "thingy", new Date()));
 task.subtasks[0].addSubtask(new Task("task 1", "desc", new Date()));
 task.subtasks[0].addSubtask(new Task("task 2", "desc", new Date(), true));
+task.subtasks.forEach((subtask) => {
+  console.log(subtask.id);
+});
 
 const view = new View();
 const controller = new Controller(task, view);
