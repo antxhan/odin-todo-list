@@ -132,16 +132,23 @@ class View {
     }
   }
   renderSubtasks() {
+    // clears subtasks
+    this.subtasksContainer.innerHTML = "";
+
     if (!this.task.subtasks) {
       return;
     }
-    // clears subtasks
-    this.subtasksContainer.innerHTML = "";
+
+    if (this.currentTab === "ongoing") {
+      // only render non-completed subtasks
+    }
+
     // populates subtasks
     this.subtasksContainer.innerHTML = `
       ${this.task.subtasks
-        .map(
-          (subtask) => `
+        .map((subtask) => {
+          if (this.currentTab === "ongoing" && !subtask.complete) {
+            return `
         <li class="subtask">
           <h3 class="subtask__title">${subtask.title}</h3>
         ${
@@ -159,8 +166,29 @@ class View {
               } >`
         }
         </li>
-        `
-        )
+        `;
+          } else if (this.currentTab === "completed" && subtask.complete) {
+            return `
+        <li class="subtask">
+          <h3 class="subtask__title">${subtask.title}</h3>
+        ${
+          subtask.subtasks.length > 0
+            ? `<p class="subtask__status">${
+                (subtask.subtasks.reduce(
+                  (acc, subtask) => acc + subtask.complete,
+                  0
+                ) /
+                  subtask.subtasks.length) *
+                100
+              }%</p>`
+            : `<input class="subtask__status" type="checkbox" ${
+                subtask.complete ? "checked" : ""
+              } >`
+        }
+        </li>
+        `;
+          }
+        })
         .join("")}
     `;
   }
@@ -251,6 +279,9 @@ class Controller {
   handleCompleteSubtask(e, subtaskIndex) {
     const subtask = this.task.subtasks[subtaskIndex];
     subtask.complete = !subtask.complete;
+    // if (this.task.subtasks.filter((subtask) => subtask.complete).length === 0) {
+    //   this.task.complete = true;
+    // }
     this.updateView();
   }
 }
