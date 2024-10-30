@@ -240,6 +240,7 @@ class Controller {
     this.view.bindClickTab(this.handleClickTab.bind(this));
     this.view.bindAddSubtask(this.handleAddSubtask.bind(this));
     this.view.bindCompleteSubtask(this.handleCompleteSubtask.bind(this));
+    console.log(this.task);
   }
   handleClickParentTask() {
     this.task = this.task.parentTask;
@@ -298,7 +299,6 @@ class Controller {
     });
   }
   handleCompleteSubtask(e, subtaskIndex, currentTab) {
-    // const subtask = this.task.subtasks[subtaskIndex];
     let subtask;
     if (currentTab === DONE_TAB) {
       const completedSubtasks = this.task.subtasks.filter(
@@ -312,9 +312,18 @@ class Controller {
       subtask = notCompletedSubtasks[subtaskIndex];
     }
     subtask.complete = !subtask.complete;
-    // if (this.task.subtasks.filter((subtask) => subtask.complete).length === 0) {
-    //   this.task.complete = true;
-    // }
+
+    // check if entire task is complete
+    if (subtask.complete) {
+      if (this.task) {
+        if (
+          this.task.subtasks.filter((subtask) => !subtask.complete).length === 0
+        ) {
+          this.task.complete = true;
+        }
+      }
+    }
+
     this.updateView();
   }
   handleClickTab(e) {
