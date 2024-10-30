@@ -135,7 +135,9 @@ class View {
     if (!this.task.subtasks) {
       return;
     }
+    // clears subtasks
     this.subtasksContainer.innerHTML = "";
+    // populates subtasks
     this.subtasksContainer.innerHTML = `
       ${this.task.subtasks
         .map(
