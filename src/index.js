@@ -225,6 +225,18 @@ class View {
       }
     });
   }
+  bindRightClickSubtask(handler) {
+    const subtasks = this.subtasksContainer.querySelectorAll(".subtask");
+    subtasks.forEach((subtask) => {
+      subtask.addEventListener("contextmenu", (e) => handler(e));
+    });
+  }
+  bindContextMenuClick(handler) {
+    const contextMenu = document.querySelector(".context-menu");
+    if (contextMenu) {
+      contextMenu.addEventListener("click", (e) => handler(e));
+    }
+  }
 }
 
 class Controller {
@@ -240,6 +252,7 @@ class Controller {
     this.view.bindClickTab(this.handleClickTab.bind(this));
     this.view.bindAddSubtask(this.handleAddSubtask.bind(this));
     this.view.bindCompleteSubtask(this.handleCompleteSubtask.bind(this));
+    this.view.bindRightClickSubtask(this.handleRightClickSubtask.bind(this));
     console.log(this.task);
   }
   handleClickParentTask() {
@@ -330,6 +343,36 @@ class Controller {
     const tab = e.target.value;
     this.view.currentTab = tab;
     this.updateView();
+  }
+  handleRightClickSubtask(e) {
+    e.preventDefault();
+    if (e.target.type === "checkbox") {
+      return;
+    }
+    const contextMenu = document.querySelector(".context-menu");
+    contextMenu.showModal();
+    contextMenu.style.left = e.clientX + "px";
+    contextMenu.style.top = e.clientY + "px";
+
+    // if user right clicks again when context menu already open.
+    contextMenu.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+
+      const rect = contextMenu.getBoundingClientRect();
+      const isInDialog =
+        rect.top <= e.clientY &&
+        e.clientY <= rect.top + rect.height &&
+        rect.left <= e.clientX &&
+        e.clientX <= rect.left + rect.width;
+      if (!isInDialog) {
+        contextMenu.close();
+      }
+    });
+
+    // if user clicks somewhere: close the context menu.
+    contextMenu.addEventListener("click", (e) => {
+      contextMenu.close();
+    });
   }
 }
 
