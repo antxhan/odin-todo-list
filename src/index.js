@@ -34,7 +34,7 @@ class Task {
   duplicateSubtask(task, index) {
     const deepCopy = structuredClone(task);
     const duplicatedTask = new Task(
-      deepCopy.title + ` (copy) copied from index:${index}`,
+      deepCopy.title + ` (copy)`,
       deepCopy.description,
       deepCopy.dueDate,
       deepCopy.complete,
