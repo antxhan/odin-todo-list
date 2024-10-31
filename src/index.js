@@ -11,6 +11,7 @@ class Task {
     complete = false,
     parentTask = null,
     subtasks = [],
+    icon = this.createRandomEmojiIcon(),
     id = title.split(" ").join("_").toString(8) +
       Math.random().toString(16).slice(2)
   ) {
@@ -20,6 +21,7 @@ class Task {
     this.complete = complete;
     this.parentTask = parentTask;
     this.subtasks = subtasks;
+    this.icon = icon;
     this.id = id;
   }
   addSubtask(task) {
@@ -37,12 +39,33 @@ class Task {
       deepCopy.dueDate,
       deepCopy.complete,
       this,
-      deepCopy.subtasks
+      deepCopy.subtasks,
+      deepCopy.icon
     );
     this.subtasks.splice(+index + 1, 0, duplicatedTask);
   }
   getSubtasks() {
     return this.subtasks;
+  }
+  createRandomEmojiIcon() {
+    const emojiRanges = [
+      [0x1f600, 0x1f64f], // Emoticons
+      [0x1f300, 0x1f5ff], // Miscellaneous Symbols and Pictographs
+      [0x1f680, 0x1f6ff], // Transport and Map Symbols
+      [0x1f700, 0x1f77f], // Alchemical Symbols
+      [0x1f780, 0x1f7ff], // Geometric Shapes Extended
+      [0x1f800, 0x1f8ff], // Supplemental Arrows-C
+      [0x1f900, 0x1f9ff], // Supplemental Symbols and Pictographs
+      [0x2600, 0x26ff], // Miscellaneous Symbols
+      [0x2700, 0x27bf], // Dingbats
+      [0x2b50, 0x2b55], // Stars
+    ];
+    const randomRange =
+      emojiRanges[Math.floor(Math.random() * emojiRanges.length)];
+    const randomCodePoint =
+      Math.floor(Math.random() * (randomRange[1] - randomRange[0] + 1)) +
+      randomRange[0];
+    return String.fromCodePoint(randomCodePoint);
   }
 }
 
@@ -80,7 +103,8 @@ class View {
     }
   }
   renderTitle() {
-    this.taskTitleContainer.innerHTML = this.task.title;
+    this.taskTitleContainer.innerHTML =
+      `<span>${this.task.icon}</span>` + this.task.title;
   }
   renderDescription() {
     const descriptionElement = document.querySelector(".task__description");
@@ -156,14 +180,21 @@ class View {
     // clears subtasks
     this.subtasksContainer.innerHTML = "";
 
-    if (!this.task.subtasks) {
+    // if there are no subtasks, render empty state
+    if (!this.task.subtasks || this.task.subtasks.length === 0) {
+      const html = `
+      <p>No subtasks, add some by click on the "new" button</p>
+      `;
+      this.subtasksContainer.insertAdjacentHTML("beforeend", html);
       return;
     }
 
     const subtaskComponent = (subtask) => {
       return `
         <li class="subtask">
-          <h3 class="subtask__title">${subtask.title}</h3>
+          <h3 class="subtask__title"><span>${subtask.icon}</span>${
+        subtask.title
+      }</h3>
         ${
           subtask.subtasks.length > 0
             ? `<p class="subtask__status">${
@@ -194,6 +225,20 @@ class View {
         })
         .join("")}
     `;
+
+    if (this.subtasksContainer.children.length === 0) {
+      if (this.currentTab === DOING_TAB) {
+        const html = `
+        <p>All done! Add some more subtasks by clicking the "new" button</p>
+        `;
+        this.subtasksContainer.insertAdjacentHTML("beforeend", html);
+      } else if (this.currentTab === DONE_TAB) {
+        const html = `
+        <p>No finished tasks!</p>
+        `;
+        this.subtasksContainer.insertAdjacentHTML("beforeend", html);
+      }
+    }
   }
   bindClickTab(handler) {
     const tabs = this.taskHeader.querySelector(".main-header__tabs");
@@ -427,6 +472,7 @@ class Controller {
 }
 
 const task = new Task("Home", "", new Date());
+task.icon = "🏠";
 
 // just for development testing
 task.addSubtask(new Task("task 1", "lorem", new Date()));

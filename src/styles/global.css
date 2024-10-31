@@ -101,6 +101,12 @@ main > .container {
   }
 }
 
+.task__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .task__description {
   color: var(--clr-neutral-200);
 }
