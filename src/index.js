@@ -26,7 +26,9 @@ class Task {
     task.parentTask = this;
     this.subtasks.push(task);
   }
-  deleteSubtask(task, index) {}
+  deleteSubtask(index) {
+    this.subtasks.splice(index, 1);
+  }
   duplicateSubtask(task, index) {
     const deepCopy = structuredClone(task);
     const duplicatedTask = new Task(
@@ -410,16 +412,13 @@ class Controller {
     switch (value) {
       case "duplicate": {
         console.log("duplicating...");
-        // console.log(this.task);
-        // console.log(this.task);
-        // console.log(typeof this.task.duplicateSubtask); // Should log 'function'
-
         this.task.duplicateSubtask(subtask, index);
         this.updateView();
         break;
       }
       case "delete": {
         console.log("deleting...");
+        this.task.deleteSubtask(index);
         this.updateView();
         break;
       }
