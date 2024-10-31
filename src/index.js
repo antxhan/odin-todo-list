@@ -26,10 +26,19 @@ class Task {
     task.parentTask = this;
     this.subtasks.push(task);
   }
-  deleteSubtask(taskId) {
-    this.subtasks = this.subtasks.filter((task) => task.id !== taskId);
+  deleteSubtask(task, index) {}
+  duplicateSubtask(task, index) {
+    const deepCopy = structuredClone(task);
+    const duplicatedTask = new Task(
+      deepCopy.title + ` (copy) copied from index:${index}`,
+      deepCopy.description,
+      deepCopy.dueDate,
+      deepCopy.complete,
+      this,
+      deepCopy.subtasks
+    );
+    this.subtasks.splice(+index + 1, 0, duplicatedTask);
   }
-  duplicateSubtask(taskId) {}
   getSubtasks() {
     return this.subtasks;
   }
@@ -52,6 +61,7 @@ class View {
     this.renderDescription();
     this.renderTabs();
     this.renderSubtasks();
+    // this.renderContextMenu();
   }
   renderParentTask() {
     const parentTaskElement = document.querySelector(".task__parent-task");
@@ -228,15 +238,17 @@ class View {
   }
   bindRightClickSubtask(handler) {
     const subtasks = this.subtasksContainer.querySelectorAll(".subtask");
-    subtasks.forEach((subtask) => {
-      subtask.addEventListener("contextmenu", (e) => handler(e));
+    subtasks.forEach((subtask, index) => {
+      subtask.addEventListener("contextmenu", (e) =>
+        handler(e, index, this.currentTab)
+      );
     });
   }
   bindContextMenuClick(handler) {
-    const contextMenu = document.querySelector(".context-menu");
-    if (contextMenu) {
-      contextMenu.addEventListener("click", (e) => handler(e));
-    }
+    const options = document.querySelectorAll(".context-menu ul li");
+    options.forEach((option) => {
+      option.addEventListener("click", (e) => handler(e));
+    });
   }
 }
 
@@ -245,6 +257,10 @@ class Controller {
     this.task = task;
     this.view = view;
     this.updateView();
+
+    // this was adding additional event listeners on every this.UpdateView() function call,
+    // since the options in context menu don't change (atm), i keep it here for now in the the initialzation.
+    this.view.bindContextMenuClick(this.handleContextMenuClick.bind(this));
   }
   updateView() {
     this.view.render(this.task);
@@ -254,7 +270,7 @@ class Controller {
     this.view.bindAddSubtask(this.handleAddSubtask.bind(this));
     this.view.bindCompleteSubtask(this.handleCompleteSubtask.bind(this));
     this.view.bindRightClickSubtask(this.handleRightClickSubtask.bind(this));
-    this.view.bindContextMenuClick(this.handleContextMenuClick.bind(this));
+    console.log(this.task.subtasks);
   }
   handleClickParentTask() {
     this.task = this.task.parentTask;
@@ -345,12 +361,15 @@ class Controller {
     this.view.currentTab = tab;
     this.updateView();
   }
-  handleRightClickSubtask(e) {
+  handleRightClickSubtask(e, index, currentTab) {
     e.preventDefault();
     if (e.target.type === "checkbox") {
       return;
     }
+
+    // this.view.toggleContextMenu();
     const contextMenu = document.querySelector(".context-menu");
+    contextMenu.setAttribute("data-subtask-index", index);
     contextMenu.showModal();
     contextMenu.style.left = e.clientX + "px";
     contextMenu.style.top = e.clientY + "px";
@@ -359,6 +378,7 @@ class Controller {
     contextMenu.addEventListener("contextmenu", (e) => {
       e.preventDefault();
 
+      // close if user right clicks outside of context menu dialog
       const rect = contextMenu.getBoundingClientRect();
       const isInDialog =
         rect.top <= e.clientY &&
@@ -367,29 +387,43 @@ class Controller {
         e.clientX <= rect.left + rect.width;
       if (!isInDialog) {
         contextMenu.close();
+        // this.view.toggleContextMenu();
+        // this.updateView();
       }
     });
 
     // if user clicks somewhere: close the context menu.
     contextMenu.addEventListener("click", (e) => {
       contextMenu.close();
+      // this.view.toggleContextMenu();
+      // this.updateView();
     });
   }
-  handleContextMenuClick(subtaskEvent) {
-    const duplicateOption = document.querySelector(
-      ".context-menu__option--duplicate"
-    );
-    duplicateOption.addEventListener("click", (e) => {
-      console.log(subtaskEvent.target);
-      this.updateView();
-    });
+  handleContextMenuClick(e) {
+    const index =
+      e.target.parentNode.parentNode.getAttribute("data-subtask-index");
+    const subtask =
+      this.view.currentTab === DOING_TAB
+        ? this.task.subtasks.filter((subtask) => !subtask.complete)[index]
+        : this.task.subtasks.filter((subtask) => subtask.complete)[index];
+    const value = e.target.getAttribute("data-value");
+    switch (value) {
+      case "duplicate": {
+        console.log("duplicating...");
+        // console.log(this.task);
+        // console.log(this.task);
+        // console.log(typeof this.task.duplicateSubtask); // Should log 'function'
 
-    const deleteOption = document.querySelector(
-      ".context-menu__option--delete"
-    );
-    deleteOption.addEventListener("click", (e) => {
-      this.updateView();
-    });
+        this.task.duplicateSubtask(subtask, index);
+        this.updateView();
+        break;
+      }
+      case "delete": {
+        console.log("deleting...");
+        this.updateView();
+        break;
+      }
+    }
   }
 }
 
@@ -400,9 +434,6 @@ task.addSubtask(new Task("task 1", "lorem", new Date()));
 task.addSubtask(new Task("task 2", "thingy", new Date()));
 task.subtasks[0].addSubtask(new Task("task 1", "desc", new Date()));
 task.subtasks[0].addSubtask(new Task("task 2", "desc", new Date(), true));
-task.subtasks.forEach((subtask) => {
-  console.log(subtask.id);
-});
 
 const view = new View();
 const controller = new Controller(task, view);
