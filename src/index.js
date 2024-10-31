@@ -29,6 +29,7 @@ class Task {
   deleteSubtask(taskId) {
     this.subtasks = this.subtasks.filter((task) => task.id !== taskId);
   }
+  duplicateSubtask(taskId) {}
   getSubtasks() {
     return this.subtasks;
   }
@@ -253,7 +254,7 @@ class Controller {
     this.view.bindAddSubtask(this.handleAddSubtask.bind(this));
     this.view.bindCompleteSubtask(this.handleCompleteSubtask.bind(this));
     this.view.bindRightClickSubtask(this.handleRightClickSubtask.bind(this));
-    console.log(this.task);
+    this.view.bindContextMenuClick(this.handleContextMenuClick.bind(this));
   }
   handleClickParentTask() {
     this.task = this.task.parentTask;
@@ -372,6 +373,22 @@ class Controller {
     // if user clicks somewhere: close the context menu.
     contextMenu.addEventListener("click", (e) => {
       contextMenu.close();
+    });
+  }
+  handleContextMenuClick(subtaskEvent) {
+    const duplicateOption = document.querySelector(
+      ".context-menu__option--duplicate"
+    );
+    duplicateOption.addEventListener("click", (e) => {
+      console.log(subtaskEvent.target);
+      this.updateView();
+    });
+
+    const deleteOption = document.querySelector(
+      ".context-menu__option--delete"
+    );
+    deleteOption.addEventListener("click", (e) => {
+      this.updateView();
     });
   }
 }
