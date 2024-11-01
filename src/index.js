@@ -25,33 +25,6 @@ class Task {
     this.parentId = parentId;
     this.subtasksIds = subtasksIds;
   }
-  // deleteSubtask(id) {
-  //   // delete from this tasks subtasks
-  //   const task = storage.getTask(this.id);
-  //   task.subtasksIds.splice(task.subtasksIds.indexOf(id), 1);
-  //   storage.updateTask(task);
-
-  //   const tasksToDelete = [id];
-
-  //   // collecting all children of the subtask
-  //   for (let id of tasksToDelete) {
-  //     const subtaskIds = storage.getTask(id).subtasksIds;
-  //     subtaskIds.forEach((subtaskId) => {
-  //       tasksToDelete.push(subtaskId);
-  //     });
-  //   }
-  //   // console.log(tasksToDelete);
-
-  //   // deleting all subtasks
-  //   tasksToDelete.forEach((id) => {
-  //     // const subtask = storage.getTask(id);
-  //     storage.deleteTask(id);
-  //     // this.subtasksIds.splice(this.subtasksIds.indexOf(id), 1);
-  //   });
-  // }
-  // duplicateSubtask(id) {
-  //   // const task = storage.getTask(this.id);
-  // }
   _generateId() {
     return Math.random().toString(16).slice(2);
   }
@@ -268,20 +241,20 @@ class View {
       }
     });
   }
-  // bindRightClickSubtask(handler) {
-  //   const subtasks = this.subtasksContainer.querySelectorAll(".subtask");
-  //   subtasks.forEach((subtask, index) => {
-  //     subtask.addEventListener("contextmenu", (e) =>
-  //       handler(e, index, this.currentTab)
-  //     );
-  //   });
-  // }
-  // bindContextMenuClick(handler) {
-  //   const options = document.querySelectorAll(".context-menu ul li");
-  //   options.forEach((option) => {
-  //     option.addEventListener("click", (e) => handler(e));
-  //   });
-  // }
+  bindRightClickSubtask(handler) {
+    const subtasks = document.querySelectorAll(".subtask");
+    subtasks.forEach((subtask, index) => {
+      subtask.addEventListener("contextmenu", (e) =>
+        handler(e, index, this.currentTab)
+      );
+    });
+  }
+  bindContextMenuClick(handler) {
+    const options = document.querySelectorAll(".context-menu ul li");
+    options.forEach((option) => {
+      option.addEventListener("click", (e) => handler(e));
+    });
+  }
 }
 
 class Controller {
@@ -294,7 +267,7 @@ class Controller {
 
     // this was adding additional event listeners on every this.UpdateView() function call,
     // since the options in context menu don't change (atm), i keep it here for now in the the initialzation.
-    // this.view.bindContextMenuClick(this.handleContextMenuClick.bind(this));
+    this.view.bindContextMenuClick(this.handleContextMenuClick.bind(this));
   }
   updateView() {
     this.view.render(this.task);
@@ -303,7 +276,7 @@ class Controller {
     this.view.bindClickParentTask(this.handleClickParentTask.bind(this));
     this.view.bindAddSubtask(this.handleAddSubtask.bind(this));
     this.view.bindCompleteSubtask(this.handleCompleteSubtask.bind(this));
-    // this.view.bindRightClickSubtask(this.handleRightClickSubtask.bind(this));
+    this.view.bindRightClickSubtask(this.handleRightClickSubtask.bind(this));
   }
   updateTask(id) {
     this.task = new Task(storage.getTask(id));
@@ -437,65 +410,65 @@ class Controller {
     this.view.currentTab = tab;
     this.updateView();
   }
-  // handleRightClickSubtask(e, index, currentTab) {
-  //   e.preventDefault();
-  //   if (e.target.type === "checkbox") {
-  //     return;
-  //   }
+  handleRightClickSubtask(e, index, currentTab) {
+    e.preventDefault();
+    if (e.target.type === "checkbox") {
+      return;
+    }
 
-  //   // this.view.toggleContextMenu();
-  //   const contextMenu = document.querySelector(".context-menu");
-  //   contextMenu.setAttribute("data-subtask-index", index);
-  //   contextMenu.showModal();
-  //   contextMenu.style.left = e.clientX + "px";
-  //   contextMenu.style.top = e.clientY + "px";
+    const contextMenu = document.querySelector(".context-menu");
+    contextMenu.setAttribute("data-subtask-index", index);
+    contextMenu.showModal();
+    contextMenu.style.left = e.clientX + "px";
+    contextMenu.style.top = e.clientY + "px";
 
-  //   // if user right clicks again when context menu already open.
-  //   contextMenu.addEventListener("contextmenu", (e) => {
-  //     e.preventDefault();
+    // if user right clicks again when context menu already open.
+    contextMenu.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
 
-  //     // close if user right clicks outside of context menu dialog
-  //     const rect = contextMenu.getBoundingClientRect();
-  //     const isInDialog =
-  //       rect.top <= e.clientY &&
-  //       e.clientY <= rect.top + rect.height &&
-  //       rect.left <= e.clientX &&
-  //       e.clientX <= rect.left + rect.width;
-  //     if (!isInDialog) {
-  //       contextMenu.close();
-  //       // this.view.toggleContextMenu();
-  //       // this.updateView();
-  //     }
-  //   });
+      // close if user right clicks outside of context menu dialog
+      const rect = contextMenu.getBoundingClientRect();
+      const isInDialog =
+        rect.top <= e.clientY &&
+        e.clientY <= rect.top + rect.height &&
+        rect.left <= e.clientX &&
+        e.clientX <= rect.left + rect.width;
+      if (!isInDialog) {
+        contextMenu.close();
+        // this.view.toggleContextMenu();
+        // this.updateView();
+      }
+    });
 
-  //   // if user clicks somewhere: close the context menu.
-  //   contextMenu.addEventListener("click", (e) => {
-  //     contextMenu.close();
-  //     // this.view.toggleContextMenu();
-  //     // this.updateView();
-  //   });
-  // }
-  // handleContextMenuClick(e) {
-  //   const index =
-  //     e.target.parentNode.parentNode.getAttribute("data-subtask-index");
-  //   const subtask =
-  //     this.view.currentTab === DOING_TAB
-  //       ? this.task.subtasks.filter((subtask) => !subtask.complete)[index]
-  //       : this.task.subtasks.filter((subtask) => subtask.complete)[index];
-  //   const value = e.target.getAttribute("data-value");
-  //   switch (value) {
-  //     case "duplicate": {
-  //       this.task.duplicateSubtask(subtask.id);
-  //       this.updateView();
-  //       break;
-  //     }
-  //     case "delete": {
-  //       this.task.deleteSubtask(subtask.id);
-  //       this.updateView();
-  //       break;
-  //     }
-  //   }
-  // }
+    // if user clicks somewhere: close the context menu.
+    contextMenu.addEventListener("click", (e) => {
+      contextMenu.close();
+    });
+  }
+  handleContextMenuClick(e) {
+    const index =
+      e.target.parentNode.parentNode.getAttribute("data-subtask-index");
+    const subtask =
+      this.view.currentTab === DOING_TAB
+        ? this.task.subtasks.filter((subtask) => !subtask.complete)[index]
+        : this.task.subtasks.filter((subtask) => subtask.complete)[index];
+    const value = e.target.getAttribute("data-value");
+    switch (value) {
+      case "duplicate": {
+        console.log("duplicating...");
+        this.storage.duplicateSubtask(subtask.id, this.task.id);
+        this.updateTask(this.task.id);
+        this.updateView();
+        break;
+      }
+      case "delete": {
+        this.storage.deleteSubtask(this.task.id, subtask.id);
+        this.updateTask(this.task.id);
+        this.updateView();
+        break;
+      }
+    }
+  }
 }
 
 class Storage {
@@ -503,8 +476,12 @@ class Storage {
     this.init();
   }
   init() {
-    // REMOVE the line below when not in development, it resets the storage
-    localStorage.setItem("tasks", JSON.stringify({}));
+    // REMOVE below when in production
+    // localStorage.setItem("tasks", JSON.stringify({}));
+
+    if (!localStorage.getItem("tasks")) {
+      localStorage.setItem("tasks", JSON.stringify({}));
+    }
 
     // if there is no master task, create one
     if (!this.tasks[MASTER_TASK_ID]) {
@@ -538,8 +515,28 @@ class Storage {
     delete tasks[taskId];
     storage.tasks = tasks;
   }
+  deleteSubtask(parentId, subtaskId) {
+    // delete from parenttask's subtasks
+    const parentTask = storage.getTask(parentId);
+    parentTask.subtasksIds.splice(parentTask.subtasksIds.indexOf(subtaskId), 1);
+    storage.updateTask(parentTask);
+
+    // collecting all children of the subtask
+    const tasksToDelete = [subtaskId];
+    for (let id of tasksToDelete) {
+      const subtaskIds = storage.getTask(id).subtasksIds;
+      subtaskIds.forEach((subtaskId) => {
+        tasksToDelete.push(subtaskId);
+      });
+    }
+    console.log(tasksToDelete);
+
+    // deleting all subtasks
+    tasksToDelete.forEach((id) => {
+      this.deleteTask(id);
+    });
+  }
   addSubtask(parentId, subtask) {
-    console.log("p", parentId);
     // creating subtask
     subtask.parentId = parentId;
     storage.updateTask(subtask);
@@ -549,37 +546,95 @@ class Storage {
     parentTask.subtasksIds.push(subtask.id);
     storage.updateTask(parentTask);
   }
+  duplicateSubtask(id, parentId) {
+    // const tasks = this.tasks;
+    let newTaskId = this._duplicateTaskRecursive(id, parentId);
+
+    const tasks = this.tasks;
+    const parentTask = tasks[parentId];
+    parentTask.subtasksIds.push(newTaskId);
+    this.tasks = tasks;
+
+    // Return the new main task ID
+    return newTaskId;
+  }
+  _duplicateTaskRecursive(taskId, parentId) {
+    let tasks = this.tasks;
+
+    // Check if the task exists
+    if (!tasks[taskId]) {
+      console.error("Task not found in localStorage");
+      return null;
+    }
+
+    // Get the original task to duplicate
+    let originalTask = tasks[taskId];
+
+    // Create and store new task with a new ID
+    let newTaskId = task._generateId(); // TODO: shouldn't do it like this.
+    let newTask = {
+      ...originalTask,
+      id: newTaskId,
+      subtasksIds: [],
+      parentId: parentId,
+      title: originalTask.title + " (copy)",
+    };
+    tasks[newTaskId] = newTask;
+    this.tasks = tasks;
+
+    // Duplicate each subtask recursively
+    originalTask.subtasksIds.forEach((subtaskId) => {
+      if (tasks[subtaskId]) {
+        // Recursively duplicate the subtask and get the new ID
+        let newSubtaskId = this._duplicateTaskRecursive(subtaskId, newTaskId);
+        if (newSubtaskId) {
+          // Add the new subtask ID to the newTask's subtasksIds
+          newTask.subtasksIds.push(newSubtaskId);
+        }
+      }
+    });
+
+    tasks = this.tasks;
+    tasks[newTaskId] = newTask;
+    this.tasks = tasks;
+
+    // Return the new task ID
+    return newTaskId;
+  }
 }
 
 const storage = new Storage();
 
-storage.addSubtask(
-  MASTER_TASK_ID,
-  new Task({
-    title: "Test subtask",
-  })
-);
+// storage.addSubtask(
+//   MASTER_TASK_ID,
+//   new Task({
+//     title: "Task 1",
+//   })
+// );
 
-storage.addSubtask(
-  MASTER_TASK_ID,
-  new Task({
-    title: "Test subtask 2",
-    id: "test-subtask-2",
-  })
-);
+// storage.addSubtask(
+//   MASTER_TASK_ID,
+//   new Task({
+//     title: "Test subtask",
+//   })
+// );
 
-storage.addSubtask(
-  "test-subtask-2",
-  new Task({
-    title: "Test subtask 3",
-    // complete: true,
-  })
-);
+// storage.addSubtask(
+//   MASTER_TASK_ID,
+//   new Task({
+//     title: "Test subtask 2",
+//     id: "test-subtask-2",
+//   })
+// );
 
-// console.log("all:", JSON.parse(localStorage.getItem("tasks")));
+// storage.addSubtask(
+//   "test-subtask-2",
+//   new Task({
+//     title: "Test subtask 3",
+//     // complete: true,
+//   })
+// );
 
 const task = new Task(storage.getTask(MASTER_TASK_ID));
-task.description = "Test description";
-// console.log("t", task);
 const view = new View();
 const controller = new Controller(task, view, storage);
