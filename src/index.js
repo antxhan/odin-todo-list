@@ -447,15 +447,14 @@ class Controller {
   }
   handleContextMenuClick(e) {
     const index =
-      e.target.parentNode.parentNode.getAttribute("data-subtask-index");
+      e.currentTarget.parentNode.parentNode.getAttribute("data-subtask-index");
     const subtask =
       this.view.currentTab === DOING_TAB
         ? this.task.subtasks.filter((subtask) => !subtask.complete)[index]
         : this.task.subtasks.filter((subtask) => subtask.complete)[index];
-    const value = e.target.getAttribute("data-value");
+    const value = e.currentTarget.getAttribute("data-value");
     switch (value) {
       case "duplicate": {
-        console.log("duplicating...");
         this.storage.duplicateSubtask(subtask.id, this.task.id);
         this.updateTask(this.task.id);
         this.updateView();
@@ -529,7 +528,6 @@ class Storage {
         tasksToDelete.push(subtaskId);
       });
     }
-    console.log(tasksToDelete);
 
     // deleting all subtasks
     tasksToDelete.forEach((id) => {
