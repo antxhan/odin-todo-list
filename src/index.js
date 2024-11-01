@@ -6,45 +6,33 @@ const MASTER_TASK_ID = "master";
 
 class Task {
   constructor(
-    title,
-    description = "",
-    dueDate = null,
-    complete = false,
-    parentTask = null,
-    subtasks = [],
     icon = this.createRandomEmojiIcon(),
-    id = title.split(" ").join("_").toString(8) +
-      Math.random().toString(16).slice(2),
-    parentTaskId = null,
+    title = "Untitled",
+    description = "",
+    dueDate = "",
+    complete = false,
+    id = this.generateId(),
+    parentId = "",
     subtasksIds = []
   ) {
+    this.icon = icon;
     this.title = title;
     this.description = description;
     this.dueDate = dueDate;
     this.complete = complete;
-    this.parentTask = parentTask;
-    // this.subtasks = this.getSubtasks();
-    // this.subtasks = subtasks;
-    this.icon = icon;
     this.id = id;
-    this.parentTaskId = parentTaskId;
+    this.parentId = parentId;
     this.subtasksIds = subtasksIds;
   }
-  addSubtask(task) {
-    const storedTasks = JSON.parse(localStorage.getItem("tasks"));
+  addSubtask({ icon, title, description, dueDate }) {
+    // creating subtask
+    const task = new Task(icon, title, description, dueDate);
+    task.parentId = this.id;
+    storage.updateTask(task);
 
-    // set subtask parentTaskId to this task id
-    task.parentTaskId = this.id;
-
-    // add subtask id + data to "tasks" object in localStorage
-    storedTasks[task.id] = task;
-
-    // append subtask id to subtasksIds array of this task + update this task in localStorage
+    // updating this task
     this.subtasksIds.push(task.id);
-    storedTasks[this.id].subtasksIds = this.subtasksIds;
-
-    // save changes to localStorage
-    localStorage.setItem("tasks", JSON.stringify(storedTasks));
+    storage.updateTask(this);
   }
   deleteSubtask(id) {
     // delete from this tasks subtasks
@@ -71,50 +59,19 @@ class Task {
     });
   }
   duplicateSubtask(id) {
-    // const deepCopy = structuredClone(task);
-    // const duplicatedTask = new Task(
-    //   deepCopy.title + ` (copy)`,
-    //   deepCopy.description,
-    //   deepCopy.dueDate,
-    //   deepCopy.complete,
-    //   this,
-    //   deepCopy.subtasks,
-    //   deepCopy.icon
-    // );
-    // this.subtasks.splice(+index + 1, 0, duplicatedTask);
+    // const task = storage.getTask(this.id);
   }
   get subtasks() {
     const subtasksIds = storage.tasks[this.id].subtasksIds;
-    if (subtasksIds.length === 0) {
-      return [];
-    } else {
-      const subtasks = subtasksIds.map((subtaskId) => {
-        const subtask = storage.getTask(subtaskId);
-        return new Task(
-          subtask.title,
-          subtask.description,
-          subtask.dueDate,
-          subtask.complete,
-          this,
-          subtask.subtasks,
-          subtask.icon,
-          subtask.id,
-          subtask.parentTaskId,
-          subtask.subtasksIds
-        );
-      });
-      return subtasks;
-    }
-  }
-  getSubtasks() {
-    console.log(this);
-    const storedSubtasks = this.subtasksIds.map((subtaskId) => {
-      return storage.getTask(subtaskId);
+    const subtasks = subtasksIds.map((subtaskId) => {
+      const subtask = storage.getTask(subtaskId);
+      return subtask;
     });
-    console.log(storedSubtasks);
-    // return subtasks;
-    // return subtasks.filter((subtask) => subtask.parentTaskId === this.id);
-    // return this.subtasks;
+    console.log(subtasks);
+    return subtasks;
+  }
+  generateId() {
+    return Math.random().toString(16).slice(2);
   }
   createRandomEmojiIcon() {
     const emojiRanges = [
@@ -162,11 +119,13 @@ class View {
     if (parentTaskElement) {
       parentTaskElement.remove();
     }
-    if (this.task.parentTask) {
+
+    if (this.task.parentId) {
+      const parentTask = storage.getTask(this.task.parentId);
       const html = `
       <button class="task__parent-task">
       <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-arrow-left"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l14 0" /><path d="M5 12l6 6" /><path d="M5 12l6 -6" /></svg>
-      ${this.task.parentTask.title}
+      ${parentTask.title}
       `;
       this.taskHeader.insertAdjacentHTML("afterbegin", html);
     }
@@ -194,7 +153,7 @@ class View {
     if (tabs) {
       tabs.remove();
     }
-    if (this.task.subtasks.length !== 0) {
+    if (this.task.subtasksIds.length !== 0) {
       const html = `
       <span class="main-header__tabs">
         <button value="${DOING_TAB}" aria-current="${
@@ -249,6 +208,8 @@ class View {
     // clears subtasks
     this.subtasksContainer.innerHTML = "";
 
+    console.log("me:", this.task.subtasks);
+
     // if there are no subtasks, render empty state
     if (!this.task.subtasks || this.task.subtasks.length === 0) {
       const html = `
@@ -265,13 +226,12 @@ class View {
         subtask.title
       }</h3>
         ${
-          subtask.subtasks.length > 0
+          subtask.subtasksIds.length > 0
             ? `<p class="subtask__status">${
-                (subtask.subtasks.reduce(
-                  (acc, subtask) => acc + subtask.complete,
-                  0
-                ) /
-                  subtask.subtasks.length) *
+                (subtask.subtasksIds
+                  .map((subtaskId) => storage.getTask(subtaskId))
+                  .reduce((acc, subtask) => acc + subtask.complete, 0) /
+                  subtask.subtasksIds.length) *
                 100
               }%</p>`
             : `<input class="subtask__status" type="checkbox" ${
@@ -284,7 +244,8 @@ class View {
 
     // populates subtasks
     this.subtasksContainer.innerHTML = `
-      ${this.task.subtasks
+      ${this.task.subtasksIds
+        .map((id) => storage.getTask(id))
         .map((subtask) => {
           if (this.currentTab === DOING_TAB && !subtask.complete) {
             return subtaskComponent(subtask);
@@ -389,7 +350,17 @@ class Controller {
     this.view.bindRightClickSubtask(this.handleRightClickSubtask.bind(this));
   }
   handleClickParentTask() {
-    this.task = this.task.parentTask;
+    const parentTask = storage.getTask(this.task.parentId);
+    this.task = new Task(
+      parentTask.icon,
+      parentTask.title,
+      parentTask.description,
+      parentTask.dueDate,
+      parentTask.complete,
+      parentTask.id,
+      parentTask.parentId,
+      parentTask.subtasksIds
+    );
     this.view.currentTab = DOING_TAB;
     this.updateView();
   }
@@ -410,7 +381,18 @@ class Controller {
       );
       subtask = notCompletedSubtasks[subtaskIndex];
     }
-    this.task = subtask;
+
+    const storedSubtask = storage.getTask(subtask.id);
+    this.task = new Task(
+      storedSubtask.icon,
+      storedSubtask.title,
+      storedSubtask.description,
+      storedSubtask.dueDate,
+      storedSubtask.complete,
+      storedSubtask.id,
+      storedSubtask.parentId,
+      storedSubtask.subtasksIds
+    );
 
     // updating view
     this.view.currentTab = DOING_TAB;
@@ -431,13 +413,14 @@ class Controller {
       if (!form.checkValidity()) {
         return;
       } else {
+        // const icon = dialog.querySelector('input[name="icon"').value;
+        const icon = "";
         const title = dialog.querySelector('input[name="title"').value;
         const description = dialog.querySelector(
           'input[name="description"'
         ).value;
         const dueDate = dialog.querySelector('input[name="dueDate"').value;
-        const task = new Task(title, description, dueDate);
-        this.task.addSubtask(task);
+        this.task.addSubtask({ icon, title, description, dueDate });
         this.updateView();
         form.reset();
         dialog.close();
@@ -529,7 +512,7 @@ class Controller {
     const value = e.target.getAttribute("data-value");
     switch (value) {
       case "duplicate": {
-        this.task.duplicateSubtask(subtask, index);
+        this.task.duplicateSubtask(subtask.id);
         this.updateView();
         break;
       }
@@ -552,10 +535,10 @@ class Storage {
 
     // keep this
     if (!this.tasks[MASTER_TASK_ID]) {
-      const masterTask = new Task("Home");
-      // console.log(masterTask);
-      masterTask.id = MASTER_TASK_ID;
+      const masterTask = new Task();
       masterTask.icon = "🏠";
+      masterTask.title = "Home";
+      masterTask.id = MASTER_TASK_ID;
       const tasks = this.tasks;
       tasks[MASTER_TASK_ID] = masterTask;
       this.tasks = tasks;
@@ -585,23 +568,15 @@ class Storage {
 const storage = new Storage();
 const masterTask = storage.getTask(MASTER_TASK_ID);
 const task = new Task(
+  masterTask.icon,
   masterTask.title,
   masterTask.description,
   masterTask.dueDate,
   masterTask.complete,
-  null,
-  masterTask.subtasks,
-  masterTask.icon,
   masterTask.id,
-  masterTask.parentTaskId,
+  masterTask.parentId,
   masterTask.subtasksIds
 );
-
-// just for development testing
-// task.addSubtask(new Task("awesome 1", "lorem"));
-// task.addSubtask(new Task("epic 2", "thingy", new Date()));
-// task.subtasks[0].addSubtask(new Task("swag 1", "desc", new Date()));
-// task.subtasks[0].addSubtask(new Task("cool 2", "desc", new Date(), true));
 
 const view = new View();
 const controller = new Controller(task, view, storage);
