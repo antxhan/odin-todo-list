@@ -25,16 +25,6 @@ class Task {
     this.parentId = parentId;
     this.subtasksIds = subtasksIds;
   }
-  // addSubtask({ icon, title, description, dueDate }) {
-  //   // creating subtask
-  //   const task = new Task(icon, title, description, dueDate);
-  //   task.parentId = this.id;
-  //   storage.updateTask(task);
-
-  //   // updating this task
-  //   this.subtasksIds.push(task.id);
-  //   storage.updateTask(this);
-  // }
   // deleteSubtask(id) {
   //   // delete from this tasks subtasks
   //   const task = storage.getTask(this.id);
@@ -61,15 +51,6 @@ class Task {
   // }
   // duplicateSubtask(id) {
   //   // const task = storage.getTask(this.id);
-  // }
-  // get subtasks() {
-  //   const subtasksIds = storage.tasks[this.id].subtasksIds;
-  //   const subtasks = subtasksIds.map((subtaskId) => {
-  //     const subtask = storage.getTask(subtaskId);
-  //     return subtask;
-  //   });
-  //   console.log(subtasks);
-  //   return subtasks;
   // }
   _generateId() {
     return Math.random().toString(16).slice(2);
@@ -276,17 +257,17 @@ class View {
       addSubtaskButton.addEventListener("click", handler);
     }
   }
-  // bindCompleteSubtask(handler) {
-  //   const subtasks = this.subtasksContainer.querySelectorAll(".subtask");
-  //   subtasks.forEach((subtask, index) => {
-  //     const checkbox = subtask.querySelector('input[type="checkbox"');
-  //     if (checkbox) {
-  //       checkbox.addEventListener("change", (e) =>
-  //         handler(e, index, this.currentTab)
-  //       );
-  //     }
-  //   });
-  // }
+  bindCompleteSubtask(handler) {
+    const subtasks = document.querySelectorAll(".subtask");
+    subtasks.forEach((subtask, index) => {
+      const checkbox = subtask.querySelector('input[type="checkbox"');
+      if (checkbox) {
+        checkbox.addEventListener("change", (e) =>
+          handler(e, index, this.currentTab)
+        );
+      }
+    });
+  }
   // bindRightClickSubtask(handler) {
   //   const subtasks = this.subtasksContainer.querySelectorAll(".subtask");
   //   subtasks.forEach((subtask, index) => {
@@ -308,7 +289,7 @@ class Controller {
     this.storage = storage;
     this.view = view;
     this.task = task;
-    this.changeTask(task.id);
+    this.updateTask(task.id);
     this.updateView();
 
     // this was adding additional event listeners on every this.UpdateView() function call,
@@ -321,10 +302,10 @@ class Controller {
     this.view.bindClickSubtask(this.handleClickSubtask.bind(this));
     this.view.bindClickParentTask(this.handleClickParentTask.bind(this));
     this.view.bindAddSubtask(this.handleAddSubtask.bind(this));
-    // this.view.bindCompleteSubtask(this.handleCompleteSubtask.bind(this));
+    this.view.bindCompleteSubtask(this.handleCompleteSubtask.bind(this));
     // this.view.bindRightClickSubtask(this.handleRightClickSubtask.bind(this));
   }
-  changeTask(id) {
+  updateTask(id) {
     this.task = new Task(storage.getTask(id));
     this.getParentTask();
     this.getSubtasks();
@@ -360,7 +341,7 @@ class Controller {
     this.task.subtasks = subtasks;
   }
   handleClickParentTask() {
-    this.changeTask(this.task.parentId);
+    this.updateTask(this.task.parentId);
   }
   handleClickSubtask(e, subtaskIndex, currentTab) {
     if (e.target.type === "checkbox") {
@@ -381,7 +362,7 @@ class Controller {
     }
 
     // changing to subtask
-    this.changeTask(subtask.id);
+    this.updateTask(subtask.id);
   }
   handleAddSubtask() {
     const dialog = document.querySelector(".new-task-dialog");
@@ -413,45 +394,44 @@ class Controller {
             dueDate: dueDate,
           })
         );
-        this.changeTask(this.task.id);
+        this.updateTask(this.task.id);
         this.updateView();
         form.reset();
         dialog.close();
       }
     });
   }
-  // handleCompleteSubtask(e, subtaskIndex, currentTab) {
-  //   let subtask;
-  //   if (currentTab === DONE_TAB) {
-  //     const completedSubtasks = this.task.subtasks.filter(
-  //       (subtask) => subtask.complete
-  //     );
-  //     subtask = completedSubtasks[subtaskIndex];
-  //   } else if (currentTab === DOING_TAB) {
-  //     const notCompletedSubtasks = this.task.subtasks.filter(
-  //       (subtask) => !subtask.complete
-  //     );
-  //     subtask = notCompletedSubtasks[subtaskIndex];
-  //   }
+  handleCompleteSubtask(e, subtaskIndex, currentTab) {
+    let subtask;
+    if (currentTab === DONE_TAB) {
+      const completedSubtasks = this.task.subtasks.filter(
+        (subtask) => subtask.complete
+      );
+      subtask = completedSubtasks[subtaskIndex];
+    } else if (currentTab === DOING_TAB) {
+      const notCompletedSubtasks = this.task.subtasks.filter(
+        (subtask) => !subtask.complete
+      );
+      subtask = notCompletedSubtasks[subtaskIndex];
+    }
 
-  //   // toggle subtask complete
-  //   subtask.complete = !subtask.complete;
-  //   this.storage.updateTask(subtask);
+    // toggle subtask complete
+    subtask.complete = !subtask.complete;
+    this.storage.updateTask(subtask);
 
-  //   // check if entire task is complete
-  //   if (subtask.complete) {
-  //     if (this.task) {
-  //       if (
-  //         this.task.subtasks.filter((subtask) => !subtask.complete).length === 0
-  //       ) {
-  //         this.task.complete = true;
-  //         this.storage.updateTask(this.task);
-  //       }
-  //     }
-  //   }
+    // check if entire task is complete
+    if (subtask.complete) {
+      if (
+        this.task.subtasks.filter((subtask) => !subtask.complete).length === 0
+      ) {
+        this.task.complete = true;
+        this.storage.updateTask(this.task);
+      }
+    }
 
-  //   this.updateView();
-  // }
+    this.updateTask(this.task.id);
+    this.updateView();
+  }
   handleClickTab(e) {
     const tab = e.target.value;
     this.view.currentTab = tab;
