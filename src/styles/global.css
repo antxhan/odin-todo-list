@@ -278,6 +278,13 @@ main > .container {
 
 footer {
   padding-block: 1rem;
+  a {
+    font-weight: bold;
+    color: var(--clr-neutral-100);
+    &:hover {
+      color: var(--clr-neutral-000);
+    }
+  }
 }
 
 /* UTILITY ------------------------------------------------------------------------ */
