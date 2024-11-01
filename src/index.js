@@ -2,6 +2,7 @@ import "./styles/global.css";
 
 const DOING_TAB = "doing";
 const DONE_TAB = "done";
+const MASTER_TASK_ID = "master";
 
 class Task {
   constructor(
@@ -13,20 +14,37 @@ class Task {
     subtasks = [],
     icon = this.createRandomEmojiIcon(),
     id = title.split(" ").join("_").toString(8) +
-      Math.random().toString(16).slice(2)
+      Math.random().toString(16).slice(2),
+    parentTaskId = null,
+    subtasksIds = []
   ) {
     this.title = title;
     this.description = description;
     this.dueDate = dueDate;
     this.complete = complete;
     this.parentTask = parentTask;
-    this.subtasks = subtasks;
+    // this.subtasks = this.getSubtasks();
+    // this.subtasks = subtasks;
     this.icon = icon;
     this.id = id;
+    this.parentTaskId = parentTaskId;
+    this.subtasksIds = subtasksIds;
   }
   addSubtask(task) {
-    task.parentTask = this;
-    this.subtasks.push(task);
+    const storedTasks = JSON.parse(localStorage.getItem("tasks"));
+
+    // set subtask parentTaskId to this task id
+    task.parentTaskId = this.id;
+
+    // add subtask id + data to "tasks" object in localStorage
+    storedTasks[task.id] = task;
+
+    // append subtask id to subtasksIds array of this task + update this task in localStorage
+    this.subtasksIds.push(task.id);
+    storedTasks[this.id].subtasksIds = this.subtasksIds;
+
+    // save changes to localStorage
+    localStorage.setItem("tasks", JSON.stringify(storedTasks));
   }
   deleteSubtask(index) {
     this.subtasks.splice(index, 1);
@@ -44,8 +62,36 @@ class Task {
     );
     this.subtasks.splice(+index + 1, 0, duplicatedTask);
   }
+  get subtasks() {
+    const storedSubtasks = this.subtasksIds.map((subtaskId) => {
+      return storage.getTask(subtaskId);
+    });
+    const subtasks = storedSubtasks.map((subtask) => {
+      return new Task(
+        subtask.title,
+        subtask.description,
+        subtask.dueDate,
+        subtask.complete,
+        this,
+        subtask.subtasks,
+        subtask.icon,
+        subtask.id,
+        subtask.parentTaskId,
+        subtask.subtasksIds
+      );
+    });
+    // console.log(subtasks);
+    return subtasks;
+  }
   getSubtasks() {
-    return this.subtasks;
+    console.log(this);
+    const storedSubtasks = this.subtasksIds.map((subtaskId) => {
+      return storage.getTask(subtaskId);
+    });
+    console.log(storedSubtasks);
+    // return subtasks;
+    // return subtasks.filter((subtask) => subtask.parentTaskId === this.id);
+    // return this.subtasks;
   }
   createRandomEmojiIcon() {
     const emojiRanges = [
@@ -300,9 +346,10 @@ class View {
 }
 
 class Controller {
-  constructor(task, view) {
+  constructor(task, view, storage) {
     this.task = task;
     this.view = view;
+    this.storage = storage;
     this.updateView();
 
     // this was adding additional event listeners on every this.UpdateView() function call,
@@ -317,7 +364,6 @@ class Controller {
     this.view.bindAddSubtask(this.handleAddSubtask.bind(this));
     this.view.bindCompleteSubtask(this.handleCompleteSubtask.bind(this));
     this.view.bindRightClickSubtask(this.handleRightClickSubtask.bind(this));
-    console.log(this.task.subtasks);
   }
   handleClickParentTask() {
     this.task = this.task.parentTask;
@@ -388,7 +434,10 @@ class Controller {
       );
       subtask = notCompletedSubtasks[subtaskIndex];
     }
+
+    // toggle subtask complete
     subtask.complete = !subtask.complete;
+    this.storage.updateTask(subtask);
 
     // check if entire task is complete
     if (subtask.complete) {
@@ -397,6 +446,7 @@ class Controller {
           this.task.subtasks.filter((subtask) => !subtask.complete).length === 0
         ) {
           this.task.complete = true;
+          this.storage.updateTask(this.task);
         }
       }
     }
@@ -456,13 +506,11 @@ class Controller {
     const value = e.target.getAttribute("data-value");
     switch (value) {
       case "duplicate": {
-        console.log("duplicating...");
         this.task.duplicateSubtask(subtask, index);
         this.updateView();
         break;
       }
       case "delete": {
-        console.log("deleting...");
         this.task.deleteSubtask(index);
         this.updateView();
         break;
@@ -471,14 +519,61 @@ class Controller {
   }
 }
 
-const task = new Task("Home", "", new Date());
-task.icon = "🏠";
+class Storage {
+  constructor() {
+    this.init();
+  }
+  init() {
+    // REMOVE the line below when not in development
+    localStorage.setItem("tasks", JSON.stringify({}));
+
+    // keep this
+    if (!this.tasks[MASTER_TASK_ID]) {
+      const masterTask = new Task("Home");
+      // console.log(masterTask);
+      masterTask.id = MASTER_TASK_ID;
+      masterTask.icon = "🏠";
+      const tasks = this.tasks;
+      tasks[MASTER_TASK_ID] = masterTask;
+      this.tasks = tasks;
+    }
+  }
+  get tasks() {
+    return JSON.parse(localStorage.getItem("tasks"));
+  }
+  set tasks(tasks) {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }
+  getTask(taskId) {
+    return this.tasks[taskId];
+  }
+  updateTask(task) {
+    const tasks = this.tasks;
+    tasks[task.id] = task;
+    this.tasks = tasks;
+  }
+}
+
+const storage = new Storage();
+const masterTask = storage.getTask(MASTER_TASK_ID);
+const task = new Task(
+  masterTask.title,
+  masterTask.description,
+  masterTask.dueDate,
+  masterTask.complete,
+  null,
+  masterTask.subtasks,
+  masterTask.icon,
+  masterTask.id,
+  masterTask.parentTaskId,
+  masterTask.subtasksIds
+);
 
 // just for development testing
-task.addSubtask(new Task("task 1", "lorem", new Date()));
-task.addSubtask(new Task("task 2", "thingy", new Date()));
-task.subtasks[0].addSubtask(new Task("task 1", "desc", new Date()));
-task.subtasks[0].addSubtask(new Task("task 2", "desc", new Date(), true));
+task.addSubtask(new Task("awesome 1", "lorem"));
+task.addSubtask(new Task("epic 2", "thingy", new Date()));
+task.subtasks[0].addSubtask(new Task("swag 1", "desc", new Date()));
+task.subtasks[0].addSubtask(new Task("cool 2", "desc", new Date(), true));
 
 const view = new View();
-const controller = new Controller(task, view);
+const controller = new Controller(task, view, storage);
