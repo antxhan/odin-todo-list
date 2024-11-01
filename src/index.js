@@ -46,54 +46,65 @@ class Task {
     // save changes to localStorage
     localStorage.setItem("tasks", JSON.stringify(storedTasks));
   }
-  deleteSubtask(index) {
-    this.subtasksIds.splice(index, 1);
+  deleteSubtask(id) {
+    // delete from this tasks subtasks
+    const task = storage.getTask(this.id);
+    task.subtasksIds.splice(task.subtasksIds.indexOf(id), 1);
+    storage.updateTask(task);
 
-    const subtaskId = this.subtasksIds[index].id;
-    const idsToBeDeleted = [subtaskId];
+    const tasksToDelete = [id];
 
-    // if(storage.getTask(subtaskId).subtasksIds.length > 0) {
-    //   // go into subtasks
+    // collecting all children of the subtask
+    for (let id of tasksToDelete) {
+      const subtaskIds = storage.getTask(id).subtasksIds;
+      subtaskIds.forEach((subtaskId) => {
+        tasksToDelete.push(subtaskId);
+      });
+    }
+    // console.log(tasksToDelete);
 
-    // } else {
-    //   // only delete if no subtasks
-    // }
-
-    // this.subtasks.splice(index, 1);
+    // deleting all subtasks
+    tasksToDelete.forEach((id) => {
+      // const subtask = storage.getTask(id);
+      storage.deleteTask(id);
+      // this.subtasksIds.splice(this.subtasksIds.indexOf(id), 1);
+    });
   }
-  duplicateSubtask(task, index) {
-    const deepCopy = structuredClone(task);
-    const duplicatedTask = new Task(
-      deepCopy.title + ` (copy)`,
-      deepCopy.description,
-      deepCopy.dueDate,
-      deepCopy.complete,
-      this,
-      deepCopy.subtasks,
-      deepCopy.icon
-    );
-    this.subtasks.splice(+index + 1, 0, duplicatedTask);
+  duplicateSubtask(id) {
+    // const deepCopy = structuredClone(task);
+    // const duplicatedTask = new Task(
+    //   deepCopy.title + ` (copy)`,
+    //   deepCopy.description,
+    //   deepCopy.dueDate,
+    //   deepCopy.complete,
+    //   this,
+    //   deepCopy.subtasks,
+    //   deepCopy.icon
+    // );
+    // this.subtasks.splice(+index + 1, 0, duplicatedTask);
   }
   get subtasks() {
-    const storedSubtasks = this.subtasksIds.map((subtaskId) => {
-      return storage.getTask(subtaskId);
-    });
-    const subtasks = storedSubtasks.map((subtask) => {
-      return new Task(
-        subtask.title,
-        subtask.description,
-        subtask.dueDate,
-        subtask.complete,
-        this,
-        subtask.subtasks,
-        subtask.icon,
-        subtask.id,
-        subtask.parentTaskId,
-        subtask.subtasksIds
-      );
-    });
-    // console.log(subtasks);
-    return subtasks;
+    const subtasksIds = storage.tasks[this.id].subtasksIds;
+    if (subtasksIds.length === 0) {
+      return [];
+    } else {
+      const subtasks = subtasksIds.map((subtaskId) => {
+        const subtask = storage.getTask(subtaskId);
+        return new Task(
+          subtask.title,
+          subtask.description,
+          subtask.dueDate,
+          subtask.complete,
+          this,
+          subtask.subtasks,
+          subtask.icon,
+          subtask.id,
+          subtask.parentTaskId,
+          subtask.subtasksIds
+        );
+      });
+      return subtasks;
+    }
   }
   getSubtasks() {
     console.log(this);
@@ -523,7 +534,7 @@ class Controller {
         break;
       }
       case "delete": {
-        this.task.deleteSubtask(index);
+        this.task.deleteSubtask(subtask.id);
         this.updateView();
         break;
       }
@@ -563,6 +574,11 @@ class Storage {
     const tasks = this.tasks;
     tasks[task.id] = task;
     this.tasks = tasks;
+  }
+  deleteTask(taskId) {
+    const tasks = storage.tasks;
+    delete tasks[taskId];
+    storage.tasks = tasks;
   }
 }
 
