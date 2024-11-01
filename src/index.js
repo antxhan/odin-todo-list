@@ -47,7 +47,19 @@ class Task {
     localStorage.setItem("tasks", JSON.stringify(storedTasks));
   }
   deleteSubtask(index) {
-    this.subtasks.splice(index, 1);
+    this.subtasksIds.splice(index, 1);
+
+    const subtaskId = this.subtasksIds[index].id;
+    const idsToBeDeleted = [subtaskId];
+
+    // if(storage.getTask(subtaskId).subtasksIds.length > 0) {
+    //   // go into subtasks
+
+    // } else {
+    //   // only delete if no subtasks
+    // }
+
+    // this.subtasks.splice(index, 1);
   }
   duplicateSubtask(task, index) {
     const deepCopy = structuredClone(task);
@@ -525,7 +537,7 @@ class Storage {
   }
   init() {
     // REMOVE the line below when not in development
-    localStorage.setItem("tasks", JSON.stringify({}));
+    // localStorage.setItem("tasks", JSON.stringify({}));
 
     // keep this
     if (!this.tasks[MASTER_TASK_ID]) {
@@ -570,10 +582,10 @@ const task = new Task(
 );
 
 // just for development testing
-task.addSubtask(new Task("awesome 1", "lorem"));
-task.addSubtask(new Task("epic 2", "thingy", new Date()));
-task.subtasks[0].addSubtask(new Task("swag 1", "desc", new Date()));
-task.subtasks[0].addSubtask(new Task("cool 2", "desc", new Date(), true));
+// task.addSubtask(new Task("awesome 1", "lorem"));
+// task.addSubtask(new Task("epic 2", "thingy", new Date()));
+// task.subtasks[0].addSubtask(new Task("swag 1", "desc", new Date()));
+// task.subtasks[0].addSubtask(new Task("cool 2", "desc", new Date(), true));
 
 const view = new View();
 const controller = new Controller(task, view, storage);
